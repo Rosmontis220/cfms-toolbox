@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+build/
+dist/
+cfms_toolbox_config.json
+cfms_toolbox_config_regular.json
+users.json
+rooms.json
+dates.json
+chat_output_*.html
+backup_with_comments/
+.venv/

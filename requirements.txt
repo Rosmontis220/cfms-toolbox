@@ -1,0 +1,4 @@
+websocket-client>=1.6
+cryptography>=41
+pystray>=0.19
+Pillow>=10
