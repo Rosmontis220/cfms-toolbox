@@ -1,4 +1,8 @@
-# CFMS工具箱（常规版）
+# CFMS工具箱
+
+![GitHub License](https://img.shields.io/github/license/Rosmontis220/cfms-toolbox?link=https%3A%2F%2Fgithub.com%2FRosmontis220%2Fcfms-toolbox%2Fblob%2Fmaster%2FLICENSE)
+![Python](https://img.shields.io/badge/Python-3.14+-blue.svg)
+![GitHub Tag](https://img.shields.io/github/v/tag/Rosmontis220/cfms-toolbox?link=https%3A%2F%2Fgithub.com%2FRosmontis220%2Fcfms-toolbox%2Freleases)
 
 通用版聊天数据工具箱：适配任意同类 CFMS 服务器，集下载、快速查看、生成网页于一体。
 
@@ -10,15 +14,15 @@
 
 ## 运行要求
 
-- Windows 10/11，Python 3.10+
+- Windows 10/11，Python 3.14+
 - 安装依赖：`pip install -r requirements.txt`
 
 ## 使用
 
-1. 运行：双击 `CFMS工具箱_v1.5.0.pyw`（或 `python CFMS工具箱_v1.5.0.pyw`）
-2. 在「下载」页填写服务器地址、端口、用户名、密码，点击「连接并扫描」——本版本不预置任何服务器信息，需自行填写
+1. 运行：双击程序
+2. 在「下载」页填写服务器地址、端口、用户名、密码，点击「连接并扫描」
 3. 勾选需要的文件，点击「下载所选文件」
-4. 下载完成后，「快速查看」页可直接浏览；「生成网页」页一键生成 HTML 并自动用浏览器打开
+4. 下载完成后，「快速查看」页可直接浏览聊天室；「生成网页」页一键生成 HTML 并自动用浏览器打开
 
 ## 配置
 
