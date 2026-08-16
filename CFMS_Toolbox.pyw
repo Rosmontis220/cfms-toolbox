@@ -45,7 +45,7 @@ def _app_dir() -> Path:
 APP_DIR = _app_dir()
 
 
-APP_VERSION = "1.5.0"
+APP_VERSION = "1.6.0"
 VARIANT_NAME = ""            
 
 SPECIAL = VARIANT_NAME == "遗闻特供版"
@@ -422,6 +422,7 @@ class DownloadPanel:
         self.client: CFMSClient | None = None
         self.files: list[dict] = []
         self.manifest: dict[str, str] = {}
+        self.session_downloaded_kinds: dict[str, str] = {}
         self.scanning = False
         self.downloading = False
         self.cancel_download = False
@@ -625,11 +626,25 @@ class DownloadPanel:
         mf = self.output_dir / ".cfms_manifest.json"
         if mf.exists():
             try:
-                self.manifest = json.loads(mf.read_text("utf-8"))
+                data = json.loads(mf.read_text("utf-8"))
             except Exception:
+                data = {}
+            if isinstance(data, dict) and "shas" in data:
+                self.manifest = data.get("shas", {})
+            elif isinstance(data, dict):
+                self.manifest = data
+            else:
                 self.manifest = {}
         else:
             self.manifest = {}
+
+    def _save_manifest(self):
+        mf = self.output_dir / ".cfms_manifest.json"
+        mf.parent.mkdir(parents=True, exist_ok=True)
+        mf.write_text(
+            json.dumps(self.manifest, indent=2, ensure_ascii=False),
+            "utf-8",
+        )
 
     def _file_status(self, f: dict) -> tuple[str, str]:
         sp = f["path"]
@@ -637,14 +652,13 @@ class DownloadPanel:
         if sp in self.manifest:
             if sha and self.manifest[sp] != sha:
                 return "已修改", "changed"
-            else:
-                local_path = self.output_dir / sanitize_path(sp)
-                if local_path.exists():
-                    return "已下载", "downloaded"
-                else:
-                    return "已修改", "changed"
-        else:
-            return "新文件", "new"
+            local_path = self.output_dir / sanitize_path(sp)
+            if local_path.exists():
+                if self.session_downloaded_kinds.get(sp) == "changed":
+                    return "已下载（已修改）", "downloaded"
+                return "已下载", "downloaded"
+            return "已修改", "changed"
+        return "新文件", "new"
 
     def _populate_tree(self):
         self.tree.delete(*self.tree.get_children())
@@ -673,9 +687,9 @@ class DownloadPanel:
         if filter_val == "全部":
             return
         status_map = {
-            "新文件": "新文件",
-            "已修改": "已修改",
-            "已下载": "已下载",
+            "新文件": "new",
+            "已修改": "changed",
+            "已下载": "downloaded",
             "隐藏": "hidden",
         }
         target = status_map.get(filter_val)
@@ -683,13 +697,8 @@ class DownloadPanel:
             return
         for item in self.all_tree_items:
             tags = self.tree.item(item, "tags")
-            if target == "hidden":
-                if "hidden" not in tags:
-                    self.tree.detach(item)
-            else:
-                values = self.tree.item(item, "values")
-                if not values or values[0] != target:
-                    self.tree.detach(item)
+            if target not in tags:
+                self.tree.detach(item)
 
     def _toggle_all(self, select: bool):
         for item in self.tree.get_children():
@@ -755,6 +764,7 @@ class DownloadPanel:
         if d:
             self.output_dir = Path(d).resolve()
             self.output_var.set(str(self.output_dir))
+            self.session_downloaded_kinds.clear()
             self._load_manifest()
             if self.files:
                 self._populate_tree()
@@ -765,6 +775,7 @@ class DownloadPanel:
             return
         self.scanning = True
         self._auto_scan = auto
+        self.session_downloaded_kinds.clear()
 
         if not auto:
             self.connect_btn.config(state="disabled")
@@ -897,6 +908,15 @@ class DownloadPanel:
                 sp = f["path"]
                 local_rel = sanitize_path(sp)
                 local_path = self.output_dir / local_rel
+                if sp in self.manifest:
+                    if f["sha"] and self.manifest[sp] != f["sha"]:
+                        kind = "changed"
+                    elif not local_path.exists():
+                        kind = "changed"
+                    else:
+                        kind = "new"
+                else:
+                    kind = "new"
 
                 self.top.after(0, lambda i=i, sp=sp, total=total_files: (
                     self.status_bar.config(text=f"正在下载 [{i+1}/{total}] {sp} ..."),
@@ -914,6 +934,7 @@ class DownloadPanel:
                     local_path.parent.mkdir(parents=True, exist_ok=True)
                     local_path.write_bytes(data)
                     self.manifest[sp] = local_sha
+                    self.session_downloaded_kinds[sp] = kind
                     downloaded += 1
 
                 except Exception as e:
@@ -922,9 +943,7 @@ class DownloadPanel:
                         mb.showwarning("下载出错", f"{sp}\n{str(e)}")
                     ))
 
-            mf = self.output_dir / ".cfms_manifest.json"
-            mf.parent.mkdir(parents=True, exist_ok=True)
-            mf.write_text(json.dumps(self.manifest, indent=2, ensure_ascii=False), "utf-8")
+            self._save_manifest()
 
             def done():
                 self.downloading = False
@@ -1357,19 +1376,20 @@ class QuickViewPanel:
             if d.name == "00000000-0000-0000-000000000000":
                 continue
             room_id = d.name
-            msgs, atts = self._parse_room(d)
-            raw_rooms.append((room_id, d, msgs, atts))
+            msgs, atts, nf = self._parse_room(d)
+            raw_rooms.append((room_id, d, msgs, atts, nf))
 
         raw_rooms.sort(
             key=lambda r: r[2][-1]["time"] if r[2] else "0000-00-00 00:00:00",
             reverse=True,
         )
 
-        for room_id, d, msgs, atts in raw_rooms:
+        for room_id, d, msgs, atts, nf in raw_rooms:
             name = self.room_names.get(room_id, room_id[:8] + "…")
             self.rooms[room_id] = {
                 "name": name, "path": d, "msgs": msgs,
                 "attachments": atts, "full_id": room_id,
+                "nonformat": nf,
             }
 
         self._render_room_list()
@@ -1379,9 +1399,10 @@ class QuickViewPanel:
                 self._cur_room = next(iter(self.rooms))
             self._select_room(self._cur_room)
 
-    def _parse_room(self, room_dir: Path) -> tuple[list[dict], list[Path]]:
+    def _parse_room(self, room_dir: Path) -> tuple[list[dict], list[Path], list[dict]]:
         msgs: list[dict] = []
         attachments: list[Path] = []
+        nonformat: list[dict] = []
 
         for f in sorted(room_dir.iterdir()):
             if f.name.startswith("."):
@@ -1392,28 +1413,37 @@ class QuickViewPanel:
                     lines = f.read_text("utf-8", errors="replace").splitlines()
                 except Exception:
                     continue
+                file_msgs = 0
+                nf_lines: list[str] = []
                 for line in lines:
                     line = line.strip()
-                    if not line or line.startswith("#"):
+                    if not line:
                         continue
-                    if " | " in line:
-                        ts, content = line.split(" | ", 1)
-                        reply_ref: tuple[str, str] | None = None
-                        m = REPLY_PAT.search(content)
-                        if m:
-                            reply_ref = (m.group(1), m.group(2).strip())
-                            content = content[:m.start()]
-                        msgs.append({
-                            "user": user_id,
-                            "time": ts,
-                            "content": content,
-                            "reply_ref": reply_ref,
-                        })
+                    if line == "# time | msg":
+                        continue
+                    if line.startswith("#") or " | " not in line:
+                        nf_lines.append(line)
+                        continue
+                    ts, content = line.split(" | ", 1)
+                    reply_ref: tuple[str, str] | None = None
+                    m = REPLY_PAT.search(content)
+                    if m:
+                        reply_ref = (m.group(1), m.group(2).strip())
+                        content = content[:m.start()]
+                    msgs.append({
+                        "user": user_id,
+                        "time": ts,
+                        "content": content,
+                        "reply_ref": reply_ref,
+                    })
+                    file_msgs += 1
+                if nf_lines and file_msgs:
+                    nonformat.append({"file": f.name, "lines": nf_lines})
             else:
                 attachments.append(f)
 
         msgs.sort(key=lambda m: m["time"])
-        return msgs, attachments
+        return msgs, attachments, nonformat
 
     def _render_room_list(self) -> None:
         for w in self._room_inner.winfo_children():
@@ -1636,8 +1666,50 @@ class QuickViewPanel:
                      font=("Microsoft YaHei", 8),
                      fg="#bbb", bg="#e0e0e0").pack(side="left", padx=10)
 
+        nf = room.get("nonformat") or []
+        if nf:
+            nf_count = sum(len(item["lines"]) for item in nf)
+            tk.Button(
+                self._attach_frame,
+                text=f"非格式文本 ({nf_count})",
+                font=("Microsoft YaHei", 8),
+                bg="#fff3e0", fg="#a0522d", relief="groove", bd=1,
+                cursor="hand2",
+                command=self._show_nonformat,
+            ).pack(side="right", padx=4, pady=4)
+
         self._chat_canvas.yview_moveto(0.0)
         self._bind_scroll_recursive(self._msg_frame)
+
+    
+    def _show_nonformat(self) -> None:
+        room = self.rooms.get(self._cur_room)
+        if not room:
+            return
+        nf = room.get("nonformat") or []
+        if not nf:
+            mb.showinfo("非格式文本", "当前聊天室没有检测到非格式文本。")
+            return
+        dlg = tk.Toplevel(self.top)
+        dlg.title(f"非格式文本 - {room['name']}")
+        dlg.transient(self.top)
+        W, H = 560, 420
+        dlg.geometry(f"{W}x{H}")
+        dlg.update_idletasks()
+        x = self.top.winfo_rootx() + max(0, (self.top.winfo_width() - W) // 2)
+        y = self.top.winfo_rooty() + max(0, (self.top.winfo_height() - H) // 2)
+        dlg.geometry(f"+{x}+{y}")
+        txt = tk.Text(dlg, wrap="word", font=("Microsoft YaHei", 10))
+        txt.pack(side="left", fill="both", expand=True)
+        sb = ttk.Scrollbar(dlg, orient="vertical", command=txt.yview)
+        txt.configure(yscrollcommand=sb.set)
+        sb.pack(side="right", fill="y")
+        for item in nf:
+            txt.insert("end", f"===== {item['file']} =====\n")
+            for ln in item["lines"]:
+                txt.insert("end", ln + "\n")
+            txt.insert("end", "\n")
+        txt.configure(state="disabled")
 
     
     def _make_url_handler(self, url: str):
