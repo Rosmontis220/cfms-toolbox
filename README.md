@@ -1,8 +1,8 @@
 # CFMS工具箱
 
-![GitHub License](https://img.shields.io/github/license/Rosmontis220/cfms-toolbox?link=https%3A%2F%2Fgithub.com%2FRosmontis220%2Fcfms-toolbox%2Fblob%2Fmaster%2FLICENSE)
-![Python](https://img.shields.io/badge/Python-3.14+-blue.svg)
-![GitHub Tag](https://img.shields.io/github/v/tag/Rosmontis220/cfms-toolbox?link=https%3A%2F%2Fgithub.com%2FRosmontis220%2Fcfms-toolbox%2Freleases)
+[![GitHub License](https://img.shields.io/github/license/Rosmontis220/cfms-toolbox)](https://github.com/Rosmontis220/cfms-toolbox/blob/master/LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.14+-blue.svg)](https://github.com/Rosmontis220/cfms-toolbox)
+[![GitHub Tag](https://img.shields.io/github/v/tag/Rosmontis220/cfms-toolbox)](https://github.com/Rosmontis220/cfms-toolbox/releases)
 
 通用版聊天数据工具箱：适配任意同类 CFMS 服务器，集下载、快速查看、生成网页于一体。
 
