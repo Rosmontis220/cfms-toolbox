@@ -18,7 +18,10 @@ import tempfile
 import threading
 import time
 from datetime import datetime
+from ipaddress import IPv4Address
 from pathlib import Path
+from random import Random
+from typing import Sequence
 
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -45,7 +48,7 @@ def _app_dir() -> Path:
 APP_DIR = _app_dir()
 
 
-APP_VERSION = "1.7.0"
+APP_VERSION = "1.8.0"
 VARIANT_NAME = ""            
 
 SPECIAL = VARIANT_NAME == "遗闻特供版"
@@ -170,7 +173,7 @@ TRANSLATIONS = {
         "进制转换": "Base Conversion",
         "摩斯电码": "Morse Code",
         "凯撒密码": "Caesar Cipher",
-        "弗吉尼亚密码": "Vigenère Cipher",
+        "维吉尼亚密码": "Vigenère Cipher",
         "ADFGVX密码": "ADFGVX Cipher",
         "编码转换": "Encoding Conversion",
         "ASCII：字符与数字编码互相转换（支持 Unicode）。": "ASCII: convert between characters and numeric codes (Unicode supported).",
@@ -178,7 +181,7 @@ TRANSLATIONS = {
         "BASE64：文本与 BASE64 编码互相转换。": "BASE64: convert between text and BASE64.",
         "摩斯电码：字母/数字/常用符号与摩斯码互相转换，单词间用 / 分隔。": "Morse code: letters/digits/common symbols; words are separated by /.",
         "凯撒密码：把字母按位移量循环平移（0-25）。": "Caesar cipher: shift letters by an offset (0-25).",
-        "弗吉尼亚密码：使用字母密钥逐字符位移。": "Vigenère cipher: shift each letter using a letter key.",
+        "维吉尼亚密码：字母或数字密钥逐字符位移，纯数字密钥即为 Gronsfeld 密码。": "Vigenère cipher: shift each letter by a letter or digit key; an all-digit key uses Gronsfeld.",
         "ADFGVX 密码：密钥生成 6×6 方阵，KeySquare 做列置换，解密自动去除填充。": "ADFGVX cipher: a key builds the 6×6 grid, KeySquare drives columnar transposition; padding is removed automatically on decrypt.",
         "编码转换：按源编码取字节、再按目标编码显示（常用于乱码修复）。": "Encoding conversion: get bytes in the source encoding, display in the target encoding (handy for fixing mojibake).",
         "SHA-256：对输入文本计算 SHA-256 哈希（十六进制），不可逆。": "SHA-256: compute the SHA-256 hash (hex) of the input; irreversible.",
@@ -194,7 +197,7 @@ TRANSLATIONS = {
         "复制结果": "Copy Result",
         "清空": "Clear",
         "位移必须是整数": "Shift must be an integer",
-        "密钥必须包含字母": "Key must contain letters",
+        "密钥必须包含字母或数字": "Key must contain letters or digits",
         "BASE64 解码失败，请检查输入内容": "BASE64 decode failed; check your input",
         "请输入密钥": "Please enter a key",
         "没有可解析的数字": "No parseable numbers",
@@ -213,6 +216,39 @@ TRANSLATIONS = {
         "应用": "Apply",
         "开发者：": "Developer: ",
         "切换语言后界面将自动重建，当前页签会保留。": "The UI rebuilds automatically after switching languages; the current tab is kept.",
+        "培根密码": "Baconian Cipher",
+        "埃特巴什码": "Atbash Cipher",
+        "A1Z26": "A1Z26",
+        "关键字密码": "Keyword Cipher",
+        "简单换位": "Simple Substitution",
+        "埃特巴什码：字母表反转（A↔Z）。": "Atbash: reverse the alphabet (A↔Z).",
+        "A1Z26：字母与数字互转（A=1 … Z=26）。": "A1Z26: convert between letters and numbers (A=1 … Z=26).",
+        "关键字密码：关键字生成替换字母表。": "Keyword cipher: a keyword builds the substitution alphabet.",
+        "简单换位：输入 26 个不重复字母作为替换字母表。": "Simple substitution: enter 26 unique letters as the substitution alphabet.",
+        "培根密码：字母转 5 位 A/B 编码（也接受 0/1）。": "Baconian: letters to 5-bit A/B codes (0/1 also accepted).",
+        "替换字母表：": "Substitution alphabet: ",
+        "数字必须在 1-26 之间：{n}": "Number must be between 1 and 26: {n}",
+        "替换字母表必须恰好包含 26 个不重复字母": "The substitution alphabet must contain exactly 26 unique letters",
+        "没有可解析的培根码": "No Baconian code to parse",
+        "培根码长度必须是 5 的倍数": "Baconian input length must be a multiple of 5",
+        "无效的培根码：{g}": "Invalid Baconian code: {g}",
+        "矩阵生成": "Matrix Generator",
+        "IP 地址：": "IP address: ",
+        "修订：": "Revision: ",
+        "干扰密钥：": "Decoy key: ",
+        "生成矩阵": "Generate Matrix",
+        "解码": "Decode",
+        "转置": "Transpose",
+        "已生成 7×7 矩阵。": "7×7 matrix generated.",
+        "端点：": "Endpoint: ",
+        "校验和：": "Checksum: ",
+        "RBF：": "RBF: ",
+        "不确定": "uncertain",
+        "距离": "distance",
+        "校验结果：有效": "Checksum: valid",
+        "校验结果：无效": "Checksum: invalid",
+        "矩阵每个格子必须填 0-9 的一位数字": "Each cell must contain a single digit 0-9",
+        "把 IP 与端口编码为 7×7 谜题矩阵（含干扰数据），也可解码还原与转置。": "Encode an IP and port into a 7×7 puzzle matrix (with decoys); decode and transpose are also supported.",
     },
     "ja": {
         "CFMS工具箱": "CFMSツールボックス",
@@ -324,7 +360,7 @@ TRANSLATIONS = {
         "进制转换": "進数変換",
         "摩斯电码": "モールス信号",
         "凯撒密码": "シーザー暗号",
-        "弗吉尼亚密码": "ヴィジュネル暗号",
+        "维吉尼亚密码": "ヴィジュネル暗号",
         "ADFGVX密码": "ADFGVX暗号",
         "编码转换": "文字コード変換",
         "ASCII：字符与数字编码互相转换（支持 Unicode）。": "ASCII：文字と数値コードを相互変換（Unicode対応）。",
@@ -332,7 +368,7 @@ TRANSLATIONS = {
         "BASE64：文本与 BASE64 编码互相转换。": "BASE64：テキストとBASE64を相互変換。",
         "摩斯电码：字母/数字/常用符号与摩斯码互相转换，单词间用 / 分隔。": "モールス信号：英字/数字/記号と相互変換。単語間は / で区切ります。",
         "凯撒密码：把字母按位移量循环平移（0-25）。": "シーザー暗号：文字をシフト数で循環移動（0〜25）。",
-        "弗吉尼亚密码：使用字母密钥逐字符位移。": "ヴィジュネル暗号：文字キーで文字ごとにシフト。",
+        "维吉尼亚密码：字母或数字密钥逐字符位移，纯数字密钥即为 Gronsfeld 密码。": "ヴィジュネル暗号：文字または数字キーでずらす。数字のみのキーはグロンスフェルト暗号。",
         "ADFGVX 密码：密钥生成 6×6 方阵，KeySquare 做列置换，解密自动去除填充。": "ADFGVX暗号：キーで6×6方陣を生成、KeySquareで列転置。復号時はパディングを自動除去。",
         "编码转换：按源编码取字节、再按目标编码显示（常用于乱码修复）。": "文字コード変換：元コードでバイト化し、先コードで表示（文字化け修正に便利）。",
         "SHA-256：对输入文本计算 SHA-256 哈希（十六进制），不可逆。": "SHA-256：入力のSHA-256ハッシュ（16進数）を計算。不可逆。",
@@ -348,7 +384,7 @@ TRANSLATIONS = {
         "复制结果": "結果をコピー",
         "清空": "クリア",
         "位移必须是整数": "シフト数は整数にしてください",
-        "密钥必须包含字母": "キーに英字を含めてください",
+        "密钥必须包含字母或数字": "キーに英字または数字を含めてください",
         "BASE64 解码失败，请检查输入内容": "BASE64の復号に失敗しました。入力を確認してください",
         "请输入密钥": "キーを入力してください",
         "没有可解析的数字": "解析できる数字がありません",
@@ -367,6 +403,39 @@ TRANSLATIONS = {
         "应用": "適用",
         "开发者：": "開発者：",
         "切换语言后界面将自动重建，当前页签会保留。": "言語を切り替えるとUIが自動的に再構築され、現在のタブが保持されます。",
+        "培根密码": "ベーコン暗号",
+        "埃特巴什码": "アトバシュ暗号",
+        "A1Z26": "A1Z26",
+        "关键字密码": "キーワード暗号",
+        "简单换位": "単純換字",
+        "埃特巴什码：字母表反转（A↔Z）。": "アトバシュ暗号：アルファベットを反転（A↔Z）。",
+        "A1Z26：字母与数字互转（A=1 … Z=26）。": "A1Z26：文字と数字を変換（A=1 … Z=26）。",
+        "关键字密码：关键字生成替换字母表。": "キーワード暗号：キーワードで置換アルファベットを生成。",
+        "简单换位：输入 26 个不重复字母作为替换字母表。": "単純換字：重複しない26文字を置換アルファベットとして入力。",
+        "培根密码：字母转 5 位 A/B 编码（也接受 0/1）。": "ベーコン暗号：文字を5桁のA/Bコードに変換（0/1も可）。",
+        "替换字母表：": "置換アルファベット：",
+        "数字必须在 1-26 之间：{n}": "数字は1〜26の範囲にしてください：{n}",
+        "替换字母表必须恰好包含 26 个不重复字母": "置換アルファベットは重複のない26文字が必要です",
+        "没有可解析的培根码": "解析できるベーコンコードがありません",
+        "培根码长度必须是 5 的倍数": "ベーコンコードの長さは5の倍数でなければなりません",
+        "无效的培根码：{g}": "無効なベーコンコード：{g}",
+        "矩阵生成": "行列生成",
+        "IP 地址：": "IPアドレス：",
+        "修订：": "リビジョン：",
+        "干扰密钥：": "デコイキー：",
+        "生成矩阵": "行列を生成",
+        "解码": "デコード",
+        "转置": "転置",
+        "已生成 7×7 矩阵。": "7×7行列を生成しました。",
+        "端点：": "エンドポイント：",
+        "校验和：": "チェックサム：",
+        "RBF：": "RBF：",
+        "不确定": "不確定",
+        "距离": "距離",
+        "校验结果：有效": "チェックサム：有効",
+        "校验结果：无效": "チェックサム：無効",
+        "矩阵每个格子必须填 0-9 的一位数字": "各セルには0〜9の1桁の数字を入力してください",
+        "把 IP 与端口编码为 7×7 谜题矩阵（含干扰数据），也可解码还原与转置。": "IPとポートを7×7パズル行列にエンコード（デコイ含む）。デコードと転置も可能。",
     },
 }
 
@@ -3270,11 +3339,17 @@ def _caesar_dec(text: str, keys: list[str]) -> str:
     return _caesar_shift(text, -shift)
 
 
+def _vigenere_ks(key: str) -> list[int]:
+    if key.isdigit():
+        return [int(c) for c in key]
+    return [ord(c) - 65 for c in key.upper() if "A" <= c <= "Z"]
+
+
 def _vigenere_enc(text: str, keys: list[str]) -> str:
     key = keys[0]
-    ks = [ord(c) - 65 for c in key.upper() if "A" <= c <= "Z"]
+    ks = _vigenere_ks(key)
     if not ks:
-        raise ValueError(tr("密钥必须包含字母"))
+        raise ValueError(tr("密钥必须包含字母或数字"))
     out = []
     ki = 0
     for ch in text:
@@ -3291,9 +3366,9 @@ def _vigenere_enc(text: str, keys: list[str]) -> str:
 
 def _vigenere_dec(text: str, keys: list[str]) -> str:
     key = keys[0]
-    ks = [ord(c) - 65 for c in key.upper() if "A" <= c <= "Z"]
+    ks = _vigenere_ks(key)
     if not ks:
-        raise ValueError(tr("密钥必须包含字母"))
+        raise ValueError(tr("密钥必须包含字母或数字"))
     out = []
     ki = 0
     for ch in text:
@@ -3305,6 +3380,149 @@ def _vigenere_dec(text: str, keys: list[str]) -> str:
             ki += 1
         else:
             out.append(ch)
+    return "".join(out)
+
+
+def _atbash(text: str, keys: list[str]) -> str:
+    out = []
+    for ch in text:
+        if "A" <= ch <= "Z":
+            out.append(chr(ord("Z") - (ord(ch) - ord("A"))))
+        elif "a" <= ch <= "z":
+            out.append(chr(ord("z") - (ord(ch) - ord("a"))))
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def _a1z26_enc(text: str, keys: list[str]) -> str:
+    parts = []
+    for ch in text.upper():
+        if "A" <= ch <= "Z":
+            parts.append(str(ord(ch) - 64))
+    return "-".join(parts)
+
+
+def _a1z26_dec(text: str, keys: list[str]) -> str:
+    parts = [p for p in re.split(r"[\s,，、;；-]+", text.strip()) if p]
+    if not parts:
+        raise ValueError(tr("没有可解析的数字"))
+    out = []
+    for p in parts:
+        try:
+            n = int(p)
+        except ValueError:
+            raise ValueError(tr("无法解析的数字：{p}").format(p=p))
+        if n < 1 or n > 26:
+            raise ValueError(tr("数字必须在 1-26 之间：{n}").format(n=n))
+        out.append(chr(64 + n))
+    return "".join(out)
+
+
+def _keyword_alphabet(key: str) -> str:
+    seen: list[str] = []
+    for ch in key.upper():
+        if "A" <= ch <= "Z" and ch not in seen:
+            seen.append(ch)
+    for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+        if ch not in seen:
+            seen.append(ch)
+    return "".join(seen)
+
+
+def _keyword_sub(text: str, keys: list[str], decode: bool) -> str:
+    key = keys[0]
+    if not key:
+        raise ValueError(tr("请输入密钥"))
+    alph = _keyword_alphabet(key)
+    table: dict[str, str] = {}
+    if decode:
+        for i, ch in enumerate(alph):
+            table[ch] = chr(65 + i)
+    else:
+        for i, ch in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+            table[ch] = alph[i]
+    out = []
+    for ch in text:
+        u = ch.upper()
+        if "A" <= u <= "Z":
+            mapped = table.get(u, u)
+            out.append(mapped.lower() if ch.islower() else mapped)
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def _keyword_enc(text: str, keys: list[str]) -> str:
+    return _keyword_sub(text, keys, False)
+
+
+def _keyword_dec(text: str, keys: list[str]) -> str:
+    return _keyword_sub(text, keys, True)
+
+
+def _simple_alphabet(keys: list[str]) -> str:
+    alph = "".join(ch for ch in keys[0].upper() if "A" <= ch <= "Z")
+    if len(alph) != 26:
+        raise ValueError(tr("替换字母表必须恰好包含 26 个不重复字母"))
+    return alph
+
+
+def _simple_sub(text: str, keys: list[str], decode: bool) -> str:
+    alph = _simple_alphabet(keys)
+    table: dict[str, str] = {}
+    if decode:
+        for i, ch in enumerate(alph):
+            table[ch] = chr(65 + i)
+    else:
+        for i, ch in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+            table[ch] = alph[i]
+    out = []
+    for ch in text:
+        u = ch.upper()
+        if "A" <= u <= "Z":
+            mapped = table.get(u, u)
+            out.append(mapped.lower() if ch.islower() else mapped)
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def _simple_enc(text: str, keys: list[str]) -> str:
+    return _simple_sub(text, keys, False)
+
+
+def _simple_dec(text: str, keys: list[str]) -> str:
+    return _simple_sub(text, keys, True)
+
+
+def _baconian_enc(text: str, keys: list[str]) -> str:
+    out = []
+    for ch in text.upper():
+        if "A" <= ch <= "Z":
+            n = ord(ch) - 65
+            bits = [(n >> (4 - i)) & 1 for i in range(5)]
+            out.append("".join("A" if b == 0 else "B" for b in bits))
+    return " ".join(out)
+
+
+def _baconian_dec(text: str, keys: list[str]) -> str:
+    clean = "".join(
+        ch for ch in text.upper().replace("0", "A").replace("1", "B")
+        if ch in "AB")
+    if not clean:
+        raise ValueError(tr("没有可解析的培根码"))
+    if len(clean) % 5:
+        raise ValueError(tr("培根码长度必须是 5 的倍数"))
+    out = []
+    for i in range(0, len(clean), 5):
+        g = clean[i:i + 5]
+        n = 0
+        for ch in g:
+            n = (n << 1) | (1 if ch == "B" else 0)
+        if n > 25:
+            raise ValueError(tr("无效的培根码：{g}").format(g=g))
+        out.append(chr(65 + n))
     return "".join(out)
 
 
@@ -3501,16 +3719,26 @@ class CryptoPanel:
         nb.pack(fill="both", expand=True, padx=6, pady=6)
         self._add_tab(nb, tr("ASCII"), tr("ASCII：字符与数字编码互相转换（支持 Unicode）。"),
                       None, _ascii_enc, _ascii_dec)
+        self._add_tab(nb, tr("A1Z26"), tr("A1Z26：字母与数字互转（A=1 … Z=26）。"),
+                      None, _a1z26_enc, _a1z26_dec)
         self._add_tab(nb, tr("进制转换"), tr("进制转换：2-36 进制互转（加密=源进制→目标进制，解密=反向）。"),
                       [(tr("源进制："), "10"), (tr("目标进制："), "16")], _radix_enc, _radix_dec)
         self._add_tab(nb, tr("BASE64"), tr("BASE64：文本与 BASE64 编码互相转换。"),
                       None, _b64_enc, _b64_dec)
         self._add_tab(nb, tr("摩斯电码"), tr("摩斯电码：字母/数字/常用符号与摩斯码互相转换，单词间用 / 分隔。"),
                       None, _morse_enc, _morse_dec)
+        self._add_tab(nb, tr("培根密码"), tr("培根密码：字母转 5 位 A/B 编码（也接受 0/1）。"),
+                      None, _baconian_enc, _baconian_dec)
         self._add_tab(nb, tr("凯撒密码"), tr("凯撒密码：把字母按位移量循环平移（0-25）。"),
                       [(tr("位移："), "3")], _caesar_enc, _caesar_dec)
-        self._add_tab(nb, tr("弗吉尼亚密码"), tr("弗吉尼亚密码：使用字母密钥逐字符位移。"),
+        self._add_tab(nb, tr("埃特巴什码"), tr("埃特巴什码：字母表反转（A↔Z）。"),
+                      None, _atbash, _atbash)
+        self._add_tab(nb, tr("维吉尼亚密码"), tr("维吉尼亚密码：字母或数字密钥逐字符位移，纯数字密钥即为 Gronsfeld 密码。"),
                       [(tr("密钥："), "")], _vigenere_enc, _vigenere_dec)
+        self._add_tab(nb, tr("关键字密码"), tr("关键字密码：关键字生成替换字母表。"),
+                      [(tr("密钥："), "")], _keyword_enc, _keyword_dec)
+        self._add_tab(nb, tr("简单换位"), tr("简单换位：输入 26 个不重复字母作为替换字母表。"),
+                      [(tr("替换字母表："), "")], _simple_enc, _simple_dec)
         self._add_tab(nb, tr("ADFGVX密码"), tr("ADFGVX 密码：密钥生成 6×6 方阵，KeySquare 做列置换，解密自动去除填充。"),
                       [(tr("密钥："), ""), ("KeySquare：", "")], _adfgvx_enc, _adfgvx_dec)
         enc_opts = ["UTF-8", "GBK", "GB2312", "Big5", "Shift_JIS", "EUC-JP", "ISO-8859-1", "ASCII"]
@@ -3586,6 +3814,246 @@ class CryptoPanel:
         self.top.clipboard_append(s)
 
 
+_MATRIX_WEIGHTS = (1, 3, 7, 9)
+
+
+def _matrix_layer_path(
+    maps: int,
+    size: int,
+    kernel: int,
+    count: int,
+    *,
+    partial: bool = False,
+) -> list[int]:
+    start = (maps - 1) % 7
+    direction = 1 if size % 2 == 0 else -1
+    cycle = [(start + direction * index * kernel) % 7 for index in range(7)]
+    if partial:
+        return [cycle[index] for index in (0, 2, 4)]
+    return cycle[:count]
+
+
+_MATRIX_PATHS = (
+    _matrix_layer_path(6, 28, 5, 3),
+    _matrix_layer_path(6, 14, 2, 3),
+    _matrix_layer_path(16, 10, 5, 3, partial=True),
+    _matrix_layer_path(16, 5, 2, 3),
+    _matrix_layer_path(120, 1, 5, 5),
+)
+
+
+def _matrix_checksum(payload: str) -> int:
+    total = sum(
+        int(digit) * _MATRIX_WEIGHTS[index % len(_MATRIX_WEIGHTS)]
+        for index, digit in enumerate(payload)
+    )
+    return (-total) % 10
+
+
+def _matrix_hamming74(value: int) -> list[int]:
+    if not 0 <= value <= 9:
+        raise ValueError("RBF class must be between 0 and 9")
+    d1 = (value >> 3) & 1
+    d2 = (value >> 2) & 1
+    d3 = (value >> 1) & 1
+    d4 = value & 1
+    p1 = d1 ^ d2 ^ d4
+    p2 = d1 ^ d3 ^ d4
+    p3 = d2 ^ d3 ^ d4
+    return [p1, p2, d1, p3, d2, d3, d4]
+
+
+_MATRIX_RBF_CODES = tuple(_matrix_hamming74(value) for value in range(10))
+
+
+def _matrix_encode(
+    ip: str,
+    port: int,
+    *,
+    revision: int = 1,
+    decoy_key: str = "726791",
+) -> list[list[int]]:
+    octets = list(IPv4Address(ip).packed)
+    if not 0 <= port <= 65_535:
+        raise ValueError("Port must fit in five decimal digits")
+    fields = [
+        *(f"{octet:03d}" for octet in octets),
+        f"{port:05d}",
+    ]
+    payload = "".join(fields)
+    random = Random(f"{decoy_key}|{revision}|{ip}|{port}")
+    matrix = [[random.randrange(10) for _ in range(7)] for _ in range(7)]
+    for row, (columns, field) in enumerate(zip(_MATRIX_PATHS, fields)):
+        for column, digit in zip(columns, field):
+            matrix[row][column] = int(digit)
+    check = _matrix_checksum(payload)
+    matrix[5] = _matrix_hamming74(check)
+    matrix[6][(10 - 1) % 7] = check
+    return matrix
+
+
+def _matrix_decode(matrix: Sequence[Sequence[int]]) -> dict[str, object]:
+    if len(matrix) != 7 or any(len(row) != 7 for row in matrix):
+        raise ValueError("Matrix must be exactly 7×7")
+    fields = [
+        "".join(str(matrix[row][column]) for column in columns)
+        for row, columns in enumerate(_MATRIX_PATHS)
+    ]
+    octets = [int(field) for field in fields[:4]]
+    port = int(fields[4])
+    payload = "".join(fields)
+    expected_check = _matrix_checksum(payload)
+    f6 = list(matrix[5])
+    if any(bit not in (0, 1) for bit in f6):
+        raise ValueError("F6 row must contain only zeroes and ones")
+    distances = [
+        sum(actual != target for actual, target in zip(f6, code))
+        for code in _MATRIX_RBF_CODES
+    ]
+    nearest_distance = min(distances)
+    nearest_classes = [
+        value
+        for value, distance in enumerate(distances)
+        if distance == nearest_distance
+    ]
+    rbf_class = nearest_classes[0] if len(nearest_classes) == 1 else None
+    stored_class = matrix[6][(10 - 1) % 7]
+    ranges_valid = all(0 <= octet <= 255 for octet in octets) and 0 <= port <= 65_535
+    checksum_valid = rbf_class == expected_check and stored_class == expected_check
+    return {
+        "endpoint": f"{'.'.join(map(str, octets))}:{port}",
+        "octets": octets,
+        "port": port,
+        "checksum": expected_check,
+        "rbf_class": rbf_class,
+        "rbf_distance": nearest_distance,
+        "valid": ranges_valid and checksum_valid,
+    }
+
+
+def _matrix_transpose(matrix: list[list[int]]) -> list[list[int]]:
+    if not matrix or any(len(row) != len(matrix) for row in matrix):
+        raise ValueError("Matrix must be non-empty and square")
+    return [list(column) for column in zip(*matrix)]
+
+
+class MatrixPanel:
+    def __init__(self, parent, toolbox):
+        self.toolbox = toolbox
+        self.cfg = toolbox.cfg
+        self.frame = ttk.Frame(parent)
+        self.top = self.frame.winfo_toplevel()
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        pad = ttk.Frame(self.frame, padding=12)
+        pad.pack(fill="both", expand=True)
+
+        ttk.Label(pad, text=tr("把 IP 与端口编码为 7×7 谜题矩阵（含干扰数据），也可解码还原与转置。"),
+                  foreground="#666").pack(anchor="w")
+
+        row1 = ttk.Frame(pad)
+        row1.pack(fill="x", pady=(8, 6))
+        ttk.Label(row1, text=tr("IP 地址：")).pack(side="left")
+        self.ip_var = tk.StringVar(value="")
+        ttk.Entry(row1, textvariable=self.ip_var, width=16).pack(side="left", padx=2)
+        ttk.Label(row1, text=tr("端口：")).pack(side="left", padx=(8, 0))
+        self.port_var = tk.StringVar(value="7573")
+        ttk.Entry(row1, textvariable=self.port_var, width=7).pack(side="left", padx=2)
+        ttk.Label(row1, text=tr("修订：")).pack(side="left", padx=(8, 0))
+        self.rev_var = tk.StringVar(value="1")
+        ttk.Entry(row1, textvariable=self.rev_var, width=5).pack(side="left", padx=2)
+        ttk.Label(row1, text=tr("干扰密钥：")).pack(side="left", padx=(8, 0))
+        self.key_var = tk.StringVar(value="726791")
+        ttk.Entry(row1, textvariable=self.key_var, width=14).pack(side="left", padx=2)
+
+        row2 = ttk.Frame(pad)
+        row2.pack(fill="x", pady=(0, 8))
+        ttk.Button(row2, text=tr("生成矩阵"), command=self._generate).pack(side="left")
+        ttk.Button(row2, text=tr("解码"), command=self._decode).pack(side="left", padx=6)
+        ttk.Button(row2, text=tr("转置"), command=self._transpose).pack(side="left")
+        ttk.Button(row2, text=tr("清空"), command=self._clear).pack(side="left", padx=6)
+
+        grid_frame = ttk.Frame(pad)
+        grid_frame.pack(fill="both", expand=True)
+        self.cells: list[list[tk.StringVar]] = []
+        for r in range(7):
+            row_vars: list[tk.StringVar] = []
+            for c in range(7):
+                var = tk.StringVar(value="")
+                ttk.Entry(
+                    grid_frame, textvariable=var, width=3, justify="center",
+                    font=("Consolas", 12),
+                ).grid(row=r, column=c, padx=1, pady=1)
+                row_vars.append(var)
+            self.cells.append(row_vars)
+
+        self.result_lbl = ttk.Label(pad, text="", foreground="#333", wraplength=760)
+        self.result_lbl.pack(anchor="w", pady=(8, 0))
+
+    def _read_matrix(self) -> list[list[int]]:
+        matrix: list[list[int]] = []
+        for row in self.cells:
+            r: list[int] = []
+            for var in row:
+                v = var.get().strip()
+                if not (v.isdigit() and len(v) == 1):
+                    raise ValueError(tr("矩阵每个格子必须填 0-9 的一位数字"))
+                r.append(int(v))
+            matrix.append(r)
+        return matrix
+
+    def _write_matrix(self, matrix: list[list[int]]) -> None:
+        for r in range(7):
+            for c in range(7):
+                self.cells[r][c].set(str(matrix[r][c]))
+
+    def _generate(self) -> None:
+        try:
+            ip = self.ip_var.get().strip()
+            port = int(self.port_var.get().strip())
+            revision = int(self.rev_var.get().strip() or "1")
+            decoy_key = self.key_var.get().strip() or "726791"
+            matrix = _matrix_encode(ip, port, revision=revision, decoy_key=decoy_key)
+        except Exception as e:
+            mb.showerror(tr("错误"), str(e))
+            return
+        self._write_matrix(matrix)
+        self.result_lbl.config(text=tr("已生成 7×7 矩阵。"), foreground="#333")
+
+    def _decode(self) -> None:
+        try:
+            info = _matrix_decode(self._read_matrix())
+        except Exception as e:
+            mb.showerror(tr("错误"), str(e))
+            return
+        ok = bool(info["valid"])
+        rbf = (str(info["rbf_class"]) if info["rbf_class"] is not None
+               else tr("不确定"))
+        txt = (
+            tr("端点：") + str(info["endpoint"]) + "\n"
+            + tr("校验和：") + str(info["checksum"])
+            + f"  |  {tr('RBF：')}{rbf} ({tr('距离')} {info['rbf_distance']})\n"
+            + (tr("校验结果：有效") if ok else tr("校验结果：无效"))
+        )
+        self.result_lbl.config(
+            text=txt, foreground=("#1a7f37" if ok else "#c42b1c"))
+
+    def _transpose(self) -> None:
+        try:
+            matrix = _matrix_transpose(self._read_matrix())
+        except Exception as e:
+            mb.showerror(tr("错误"), str(e))
+            return
+        self._write_matrix(matrix)
+
+    def _clear(self) -> None:
+        for row in self.cells:
+            for var in row:
+                var.set("")
+        self.result_lbl.config(text="")
+
+
 class SettingsPanel:
     def __init__(self, parent, toolbox):
         self.toolbox = toolbox
@@ -3657,6 +4125,7 @@ class ToolboxApp:
         self.download_panel = DownloadPanel(nb, self)
         self.view_panel = QuickViewPanel(nb, self)
         self.html_panel = HtmlGenPanel(nb, self)
+        self.matrix_panel = MatrixPanel(nb, self)
         self.crypto_panel = CryptoPanel(nb, self)
         self.settings_panel = SettingsPanel(nb, self)
 
@@ -3671,6 +4140,7 @@ class ToolboxApp:
         nb.add(self.download_panel.frame, text=tr("下载"))
         nb.add(self.view_panel.frame, text=tr("快速查看"))
         nb.add(self.html_panel.frame, text=tr("生成网页"))
+        nb.add(self.matrix_panel.frame, text=tr("矩阵生成"))
         nb.add(self.crypto_panel.frame, text=tr("加解密"))
         nb.add(self.settings_panel.frame, text="⚙")
         nb.bind("<<NotebookTabChanged>>", self._on_tab_changed)
