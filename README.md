@@ -11,6 +11,7 @@
 - **下载**：连接 CFMS 服务器（WebSocket + AES-GCM 加密传输），扫描并增量下载文件；支持自动刷新、任务栏托盘通知；下载后区分本次下载的文件是新文件还是已修改文件
 - **快速查看**：本地聊天记录气泡浏览，支持房间/用户重命名、可点击链接、附件打开；自动检测聊天记录中混入的非格式文本，可在附件栏一键查看
 - **生成网页**：把下载的 `.runtime/chatbox` 数据生成微信风格 HTML 页面（生成模块已内置，无需外部文件），保存到程序目录并自动打开
+- **加解密**：集成 ASCII、进制转换、BASE64、摩斯电码、凯撒密码、弗吉尼亚密码、ADFGVX 密码、编码转换、SHA-256 等常用加解密/编码工具；界面支持中文 / English / 日本語 切换
 
 ## 运行要求
 
@@ -33,7 +34,7 @@
 
 ```bash
 pip install pyinstaller
-pyinstaller --noconfirm --onefile --windowed --name "CFMS_Toolbox_v1.6.0" CFMS_Toolbox.pyw
+pyinstaller --noconfirm --onefile --windowed --name "CFMS_Toolbox_v1.7.0" CFMS_Toolbox.pyw
 ```
 
 ## 隐私说明

@@ -45,13 +45,340 @@ def _app_dir() -> Path:
 APP_DIR = _app_dir()
 
 
-APP_VERSION = "1.6.0"
+APP_VERSION = "1.7.0"
 VARIANT_NAME = ""            
 
 SPECIAL = VARIANT_NAME == "遗闻特供版"
 APP_TITLE = f"CFMS工具箱 v{APP_VERSION}"
 if VARIANT_NAME:
     APP_TITLE += f" {VARIANT_NAME}"
+
+
+LANG = "zh"
+
+LANG_DISPLAY = {"中文": "zh", "English": "en", "日本語": "ja"}
+LANG_NAMES = {v: k for k, v in LANG_DISPLAY.items()}
+
+TRANSLATIONS = {
+    "en": {
+        "CFMS工具箱": "CFMS Toolbox",
+        "下载": "Download",
+        "快速查看": "Quick View",
+        "生成网页": "Generate HTML",
+        "加解密": "Encrypt/Decrypt",
+        "显示窗口": "Show Window",
+        "退出": "Quit",
+        "程序已最小化到托盘，自动刷新仍在运行。": "Minimized to tray; auto-refresh is still running.",
+        "地址：": "Address: ",
+        "端口：": "Port: ",
+        "用户名：": "Username: ",
+        "密码：": "Password: ",
+        "连接并扫描": "Connect & Scan",
+        "全选": "Select All",
+        "取消选择": "Deselect",
+        "全选改动": "Select Changed",
+        "筛选:": "Filter:",
+        "全部": "All",
+        "新文件": "New",
+        "已修改": "Modified",
+        "已下载": "Downloaded",
+        "已下载（已修改）": "Downloaded (Modified)",
+        "隐藏": "Hidden",
+        "下载所选文件": "Download Selected",
+        "取消": "Cancel",
+        "输出：": "Output: ",
+        "自定义文件夹": "Browse…",
+        "自动刷新": "Auto Refresh",
+        "间隔(分):": "Interval (min):",
+        "文件名": "File",
+        "状态": "Status",
+        "就绪，请连接并扫描。": "Ready. Connect and scan.",
+        "提示": "Notice",
+        "请先选择要下载的文件": "Please select files to download first",
+        "请先设置输出文件夹（点击「自定义文件夹」选择保存位置）。": "Please set the output folder first (click “Browse…” to choose).",
+        "错误": "Error",
+        "下载出错": "Download error",
+        "预览: ": "Preview: ",
+        "无法预览二进制文件:\n": "Cannot preview binary file:\n",
+        "正在下载 {sp} 用于预览...": "Downloading {sp} for preview...",
+        "就绪。": "Ready.",
+        "正在连接...": "Connecting...",
+        "正在扫描服务器...": "Scanning server...",
+        "自动刷新中...": "Auto-refreshing...",
+        "自动刷新扫描服务器...": "Auto-refresh scanning server...",
+        "请先在顶部填写服务器地址和端口": "Please enter the server address and port at the top first",
+        "请先填写用户名和密码": "Please enter username and password first",
+        "正在扫描...": "Scanning...",
+        "共找到 {n} 个文件": "Found {n} files",
+        "扫描结束，共找到 {n} 个文件。蓝色-新文件，紫色-隐藏文件，红色-已修改文件": "Scan finished: {n} files. Blue=new, purple=hidden, red=modified",
+        "自动刷新失败": "Auto-refresh failed",
+        "自动刷新错误：": "Auto-refresh error: ",
+        "扫描错误": "Scan error",
+        "失败": "Failed",
+        "正在下载 [{i}/{n}] {sp} ...": "Downloading [{i}/{n}] {sp} ...",
+        "下载完成：{d} 个文件成功，{f} 个失败，跳过 {s} 个": "Done: {d} downloaded, {f} failed, {s} skipped",
+        "正在取消...": "Cancelling...",
+        "发现 {n} 个新文件 / {m} 个已修改": "Found {n} new / {m} modified",
+        "扫描发现": "Scan found",
+        "新增 {n} 个文件，{m} 个已修改。": "{n} new files, {m} modified.",
+        "chatbox 文件夹路径:": "Chatbox folder path:",
+        "选择文件夹": "Choose Folder",
+        "刷新": "Refresh",
+        "设置": "Settings",
+        "帮助": "Help",
+        "就绪": "Ready",
+        "请选择 chatbox 文件夹": "Please choose the chatbox folder",
+        "未选择文件夹": "No folder selected",
+        "共 {n} 个聊天室": "{n} rooms",
+        "附件:": "Attachments: ",
+        "无附件": "No attachments",
+        "非格式文本 ({n})": "Non-format text ({n})",
+        "非格式文本": "Non-format Text",
+        "当前聊天室没有检测到非格式文本。": "No non-format text detected in this room.",
+        "暂无消息": "No messages",
+        "文件夹": "Folder",
+        "房间名": "Room Name",
+        "用户名": "Username",
+        "浏览…": "Browse…",
+        "双击列表项可编辑房间名": "Double-click an item to edit the room name",
+        "双击列表项可编辑用户名": "Double-click an item to edit the username",
+        "重命名房间": "Rename Room",
+        "重命名用户": "Rename User",
+        "输入自定义房间名:": "Enter a custom room name:",
+        "为 {uid}… 输入自定义名称:": "Enter a custom name for {uid}…:",
+        "房间 {r}…\n输入自定义名称(留空恢复默认):": "Room {r}…\nEnter a custom name (blank resets):",
+        "用户 {u}…\n输入自定义名称(留空恢复默认):": "User {u}…\nEnter a custom name (blank resets):",
+        "确定": "OK",
+        "链接": "Link",
+        "打开链接": "Open Link",
+        "复制链接": "Copy Link",
+        "生成微信风格聊天记录网页": "Generate WeChat-style Chat HTML",
+        "数据源为下载后的 .runtime/chatbox 文件夹，HTML 将保存到本程序所在目录并自动用浏览器打开。": "Source: the downloaded .runtime/chatbox folder. HTML is saved next to the program and opened automatically in your browser.",
+        "聊天数据：": "Chat data: ",
+        "⚙  生成 HTML 并自动打开": "⚙  Generate HTML & Open",
+        "输出文件：": "Output file: ",
+        "请选择 chatbox 文件夹（含各聊天室子文件夹）": "Choose the chatbox folder (containing room subfolders)",
+        "聊天数据文件夹不存在：\n{path}\n\n": "Chat data folder not found:\n{path}\n\n",
+        "请先在「下载」页下载数据，或点击「选择文件夹」手动指定。": "Download data on the Download tab first, or click “Choose Folder” to select it manually.",
+        "未找到任何聊天数据（chatbox 目录为空或无消息）": "No chat data found (the chatbox folder is empty or has no messages)",
+        "生成失败": "Generation failed",
+        "✅ 已生成：": "✅ Generated: ",
+        "共 {n} 个会话房间，{m} 条消息": "{n} rooms, {m} messages",
+        "已用默认浏览器打开。": "Opened in the default browser.",
+        "自动打开失败（可手动打开）：": "Auto-open failed (open it manually): ",
+        "开始生成……": "Generating...",
+        "进制转换": "Base Conversion",
+        "摩斯电码": "Morse Code",
+        "凯撒密码": "Caesar Cipher",
+        "弗吉尼亚密码": "Vigenère Cipher",
+        "ADFGVX密码": "ADFGVX Cipher",
+        "编码转换": "Encoding Conversion",
+        "ASCII：字符与数字编码互相转换（支持 Unicode）。": "ASCII: convert between characters and numeric codes (Unicode supported).",
+        "进制转换：2-36 进制互转（加密=源进制→目标进制，解密=反向）。": "Base conversion: convert between bases 2-36 (Encrypt=source→target, Decrypt=reverse).",
+        "BASE64：文本与 BASE64 编码互相转换。": "BASE64: convert between text and BASE64.",
+        "摩斯电码：字母/数字/常用符号与摩斯码互相转换，单词间用 / 分隔。": "Morse code: letters/digits/common symbols; words are separated by /.",
+        "凯撒密码：把字母按位移量循环平移（0-25）。": "Caesar cipher: shift letters by an offset (0-25).",
+        "弗吉尼亚密码：使用字母密钥逐字符位移。": "Vigenère cipher: shift each letter using a letter key.",
+        "ADFGVX 密码：密钥生成 6×6 方阵，KeySquare 做列置换，解密自动去除填充。": "ADFGVX cipher: a key builds the 6×6 grid, KeySquare drives columnar transposition; padding is removed automatically on decrypt.",
+        "编码转换：按源编码取字节、再按目标编码显示（常用于乱码修复）。": "Encoding conversion: get bytes in the source encoding, display in the target encoding (handy for fixing mojibake).",
+        "SHA-256：对输入文本计算 SHA-256 哈希（十六进制），不可逆。": "SHA-256: compute the SHA-256 hash (hex) of the input; irreversible.",
+        "位移：": "Shift: ",
+        "密钥：": "Key: ",
+        "源进制：": "Source base: ",
+        "目标进制：": "Target base: ",
+        "源编码：": "Source encoding: ",
+        "目标编码：": "Target encoding: ",
+        "加密": "Encrypt",
+        "解密": "Decrypt",
+        "计算": "Compute",
+        "复制结果": "Copy Result",
+        "清空": "Clear",
+        "位移必须是整数": "Shift must be an integer",
+        "密钥必须包含字母": "Key must contain letters",
+        "BASE64 解码失败，请检查输入内容": "BASE64 decode failed; check your input",
+        "请输入密钥": "Please enter a key",
+        "没有可解析的数字": "No parseable numbers",
+        "无法解析的数字：{p}": "Unparseable number: {p}",
+        "超出 Unicode 范围：{n}": "Out of Unicode range: {n}",
+        "进制必须是整数": "Bases must be integers",
+        "进制必须在 2-36 之间": "Bases must be between 2 and 36",
+        "请输入数字": "Please enter a number",
+        "无法按 {n} 进制解析输入": "Cannot parse the input as base {n}",
+        "转换失败：{e}": "Conversion failed: {e}",
+        "输入中没有任何可加密的字母或数字": "No encryptable letters or digits in the input",
+        "请输入转置密钥": "Please enter the transposition key (KeySquare)",
+        "密文长度不是 KeySquare 长度的整数倍（请检查 KeySquare）": "Ciphertext length is not a multiple of the KeySquare length (check KeySquare)",
+        "操作失败：{e}": "Operation failed: {e}",
+        "界面语言：": "Language: ",
+        "应用": "Apply",
+        "开发者：": "Developer: ",
+        "切换语言后界面将自动重建，当前页签会保留。": "The UI rebuilds automatically after switching languages; the current tab is kept.",
+    },
+    "ja": {
+        "CFMS工具箱": "CFMSツールボックス",
+        "下载": "ダウンロード",
+        "快速查看": "クイック表示",
+        "生成网页": "HTML生成",
+        "加解密": "暗号化・復号",
+        "显示窗口": "ウィンドウ表示",
+        "退出": "終了",
+        "程序已最小化到托盘，自动刷新仍在运行。": "トレイに最小化しました。自動更新は継続中です。",
+        "地址：": "アドレス：",
+        "端口：": "ポート：",
+        "用户名：": "ユーザー名：",
+        "密码：": "パスワード：",
+        "连接并扫描": "接続してスキャン",
+        "全选": "全選択",
+        "取消选择": "選択解除",
+        "全选改动": "変更を選択",
+        "筛选:": "フィルタ：",
+        "全部": "すべて",
+        "新文件": "新規",
+        "已修改": "変更済み",
+        "已下载": "DL済み",
+        "已下载（已修改）": "DL済み（変更）",
+        "隐藏": "非表示",
+        "下载所选文件": "選択をDL",
+        "取消": "キャンセル",
+        "输出：": "出力：",
+        "自定义文件夹": "参照…",
+        "自动刷新": "自動更新",
+        "间隔(分):": "間隔(分)：",
+        "文件名": "ファイル名",
+        "状态": "状態",
+        "就绪，请连接并扫描。": "準備完了。接続してスキャンしてください。",
+        "提示": "お知らせ",
+        "请先选择要下载的文件": "ダウンロードするファイルを選択してください",
+        "请先设置输出文件夹（点击「自定义文件夹」选择保存位置）。": "出力フォルダを先に設定してください（「参照…」で選択）。",
+        "错误": "エラー",
+        "下载出错": "ダウンロードエラー",
+        "预览: ": "プレビュー：",
+        "无法预览二进制文件:\n": "バイナリファイルをプレビューできません：\n",
+        "正在下载 {sp} 用于预览...": "{sp} をプレビュー用にダウンロード中...",
+        "就绪。": "準備完了。",
+        "正在连接...": "接続中...",
+        "正在扫描服务器...": "サーバーをスキャン中...",
+        "自动刷新中...": "自動更新中...",
+        "自动刷新扫描服务器...": "自動更新でサーバーをスキャン中...",
+        "请先在顶部填写服务器地址和端口": "上部でサーバーアドレスとポートを入力してください",
+        "请先填写用户名和密码": "ユーザー名とパスワードを入力してください",
+        "正在扫描...": "スキャン中...",
+        "共找到 {n} 个文件": "{n} 個のファイルが見つかりました",
+        "扫描结束，共找到 {n} 个文件。蓝色-新文件，紫色-隐藏文件，红色-已修改文件": "スキャン完了：{n} 個。青=新規、紫=非表示、赤=変更",
+        "自动刷新失败": "自動更新に失敗しました",
+        "自动刷新错误：": "自動更新エラー：",
+        "扫描错误": "スキャンエラー",
+        "失败": "失敗",
+        "正在下载 [{i}/{n}] {sp} ...": "[{i}/{n}] {sp} をダウンロード中 ...",
+        "下载完成：{d} 个文件成功，{f} 个失败，跳过 {s} 个": "完了：{d} 成功、{f} 失敗、{s} スキップ",
+        "正在取消...": "キャンセル中...",
+        "发现 {n} 个新文件 / {m} 个已修改": "新規 {n} 個 / 変更 {m} 個",
+        "扫描发现": "スキャン結果",
+        "新增 {n} 个文件，{m} 个已修改。": "新規 {n} 個、変更 {m} 個。",
+        "chatbox 文件夹路径:": "chatbox フォルダパス：",
+        "选择文件夹": "フォルダ選択",
+        "刷新": "更新",
+        "设置": "設定",
+        "帮助": "ヘルプ",
+        "就绪": "準備完了",
+        "请选择 chatbox 文件夹": "chatbox フォルダを選択してください",
+        "未选择文件夹": "フォルダ未選択",
+        "共 {n} 个聊天室": "{n} 部屋",
+        "附件:": "添付：",
+        "无附件": "添付なし",
+        "非格式文本 ({n})": "非定型テキスト ({n})",
+        "非格式文本": "非定型テキスト",
+        "当前聊天室没有检测到非格式文本。": "この部屋に非定型テキストは検出されませんでした。",
+        "暂无消息": "メッセージなし",
+        "文件夹": "フォルダ",
+        "房间名": "部屋名",
+        "用户名": "ユーザー名",
+        "浏览…": "参照…",
+        "双击列表项可编辑房间名": "項目をダブルクリックで部屋名を編集",
+        "双击列表项可编辑用户名": "項目をダブルクリックでユーザー名を編集",
+        "重命名房间": "部屋名を変更",
+        "重命名用户": "ユーザー名を変更",
+        "输入自定义房间名:": "カスタム部屋名を入力：",
+        "为 {uid}… 输入自定义名称:": "{uid}… のカスタム名を入力：",
+        "房间 {r}…\n输入自定义名称(留空恢复默认):": "部屋 {r}…\nカスタム名を入力（空欄でリセット）：",
+        "用户 {u}…\n输入自定义名称(留空恢复默认):": "ユーザー {u}…\nカスタム名を入力（空欄でリセット）：",
+        "确定": "OK",
+        "链接": "リンク",
+        "打开链接": "リンクを開く",
+        "复制链接": "リンクをコピー",
+        "生成微信风格聊天记录网页": "微信風チャットHTMLを生成",
+        "数据源为下载后的 .runtime/chatbox 文件夹，HTML 将保存到本程序所在目录并自动用浏览器打开。": "データ元：ダウンロード済み .runtime/chatbox フォルダ。HTMLはプログラムと同じ場所に保存され、ブラウザで自動的に開きます。",
+        "聊天数据：": "チャットデータ：",
+        "⚙  生成 HTML 并自动打开": "⚙  HTML生成して開く",
+        "输出文件：": "出力ファイル：",
+        "请选择 chatbox 文件夹（含各聊天室子文件夹）": "chatbox フォルダ（各ルームのサブフォルダを含む）を選択",
+        "聊天数据文件夹不存在：\n{path}\n\n": "チャットデータフォルダが見つかりません：\n{path}\n\n",
+        "请先在「下载」页下载数据，或点击「选择文件夹」手动指定。": "「ダウンロード」タブでデータを取得するか、「フォルダ選択」で手動指定してください。",
+        "未找到任何聊天数据（chatbox 目录为空或无消息）": "チャットデータが見つかりません（chatbox フォルダが空かメッセージなし）",
+        "生成失败": "生成に失敗しました",
+        "✅ 已生成：": "✅ 生成：",
+        "共 {n} 个会话房间，{m} 条消息": "{n} 部屋、{m} メッセージ",
+        "已用默认浏览器打开。": "デフォルトブラウザで開きました。",
+        "自动打开失败（可手动打开）：": "自動オープン失敗（手動で開いてください）：",
+        "开始生成……": "生成中...",
+        "进制转换": "進数変換",
+        "摩斯电码": "モールス信号",
+        "凯撒密码": "シーザー暗号",
+        "弗吉尼亚密码": "ヴィジュネル暗号",
+        "ADFGVX密码": "ADFGVX暗号",
+        "编码转换": "文字コード変換",
+        "ASCII：字符与数字编码互相转换（支持 Unicode）。": "ASCII：文字と数値コードを相互変換（Unicode対応）。",
+        "进制转换：2-36 进制互转（加密=源进制→目标进制，解密=反向）。": "進数変換：2〜36進数を相互変換（暗号化=元→先、復号=逆方向）。",
+        "BASE64：文本与 BASE64 编码互相转换。": "BASE64：テキストとBASE64を相互変換。",
+        "摩斯电码：字母/数字/常用符号与摩斯码互相转换，单词间用 / 分隔。": "モールス信号：英字/数字/記号と相互変換。単語間は / で区切ります。",
+        "凯撒密码：把字母按位移量循环平移（0-25）。": "シーザー暗号：文字をシフト数で循環移動（0〜25）。",
+        "弗吉尼亚密码：使用字母密钥逐字符位移。": "ヴィジュネル暗号：文字キーで文字ごとにシフト。",
+        "ADFGVX 密码：密钥生成 6×6 方阵，KeySquare 做列置换，解密自动去除填充。": "ADFGVX暗号：キーで6×6方陣を生成、KeySquareで列転置。復号時はパディングを自動除去。",
+        "编码转换：按源编码取字节、再按目标编码显示（常用于乱码修复）。": "文字コード変換：元コードでバイト化し、先コードで表示（文字化け修正に便利）。",
+        "SHA-256：对输入文本计算 SHA-256 哈希（十六进制），不可逆。": "SHA-256：入力のSHA-256ハッシュ（16進数）を計算。不可逆。",
+        "位移：": "シフト：",
+        "密钥：": "キー：",
+        "源进制：": "元の進数：",
+        "目标进制：": "先の進数：",
+        "源编码：": "元のコード：",
+        "目标编码：": "先のコード：",
+        "加密": "暗号化",
+        "解密": "復号",
+        "计算": "計算",
+        "复制结果": "結果をコピー",
+        "清空": "クリア",
+        "位移必须是整数": "シフト数は整数にしてください",
+        "密钥必须包含字母": "キーに英字を含めてください",
+        "BASE64 解码失败，请检查输入内容": "BASE64の復号に失敗しました。入力を確認してください",
+        "请输入密钥": "キーを入力してください",
+        "没有可解析的数字": "解析できる数字がありません",
+        "无法解析的数字：{p}": "解析できない数字：{p}",
+        "超出 Unicode 范围：{n}": "Unicodeの範囲外：{n}",
+        "进制必须是整数": "進数は整数にしてください",
+        "进制必须在 2-36 之间": "進数は2〜36の範囲にしてください",
+        "请输入数字": "数字を入力してください",
+        "无法按 {n} 进制解析输入": "{n}進数として解析できません",
+        "转换失败：{e}": "変換に失敗しました：{e}",
+        "输入中没有任何可加密的字母或数字": "暗号化できる英字または数字がありません",
+        "请输入转置密钥": "転置キー（KeySquare）を入力してください",
+        "密文长度不是 KeySquare 长度的整数倍（请检查 KeySquare）": "暗号文の長さがKeySquare長の倍数ではありません（KeySquareを確認）",
+        "操作失败：{e}": "操作に失敗しました：{e}",
+        "界面语言：": "言語：",
+        "应用": "適用",
+        "开发者：": "開発者：",
+        "切换语言后界面将自动重建，当前页签会保留。": "言語を切り替えるとUIが自動的に再構築され、現在のタブが保持されます。",
+    },
+}
+
+
+def set_lang(code: str) -> None:
+    global LANG
+    if code in LANG_NAMES:
+        LANG = code
+
+
+def tr(key: str) -> str:
+    return TRANSLATIONS.get(LANG, {}).get(key, key)
 
 
 CONFIG_PATH = APP_DIR / (
@@ -78,6 +405,7 @@ DEFAULT_SETTINGS = {
     "proxy_type": "",
     "proxy_host": "",
     "proxy_port": "",
+    "language": "zh",
 }
 
 def load_config() -> dict:
@@ -92,6 +420,7 @@ def load_config() -> dict:
                 cfg.update({k: v for k, v in data.items() if k in cfg})
         except Exception:
             pass
+    set_lang(str(cfg.get("language", "zh")))
     return cfg
 
 
@@ -443,27 +772,27 @@ class DownloadPanel:
         row1 = ttk.Frame(self.frame, padding=5)
         row1.pack(fill="x")
 
-        ttk.Label(row1, text="地址：").pack(side="left")
+        ttk.Label(row1, text=tr("地址：")).pack(side="left")
         self.host_var = tk.StringVar()
         self._host_entry = tk.Entry(row1, textvariable=self.host_var, width=17)
         self._host_entry.pack(side="left", padx=2)
 
-        ttk.Label(row1, text="端口：").pack(side="left")
+        ttk.Label(row1, text=tr("端口：")).pack(side="left")
         self.port_var = tk.StringVar()
         self._port_entry = tk.Entry(row1, textvariable=self.port_var, width=6)
         self._port_entry.pack(side="left", padx=2)
 
-        ttk.Label(row1, text="用户名：").pack(side="left")
+        ttk.Label(row1, text=tr("用户名：")).pack(side="left")
         self.user_var = tk.StringVar()
         self._user_entry = tk.Entry(row1, textvariable=self.user_var, width=14)
         self._user_entry.pack(side="left", padx=2)
 
-        ttk.Label(row1, text="密码：").pack(side="left")
+        ttk.Label(row1, text=tr("密码：")).pack(side="left")
         self.pass_var = tk.StringVar()
         self._pass_entry = tk.Entry(row1, textvariable=self.pass_var, width=16, show="*")
         self._pass_entry.pack(side="left", padx=2)
 
-        self.connect_btn = ttk.Button(row1, text="连接并扫描", command=self._do_scan)
+        self.connect_btn = ttk.Button(row1, text=tr("连接并扫描"), command=self._do_scan)
         self.connect_btn.pack(side="left", padx=(8, 2))
         self.scan_status = ttk.Label(row1, text="")
         self.scan_status.pack(side="left", padx=5)
@@ -471,17 +800,17 @@ class DownloadPanel:
         row2 = ttk.Frame(self.frame, padding=(5, 0))
         row2.pack(fill="x")
 
-        ttk.Button(row2, text="全选", command=lambda: self._toggle_all(True)).pack(side="left", padx=2)
-        ttk.Button(row2, text="取消选择", command=lambda: self._toggle_all(False)).pack(side="left", padx=2)
-        ttk.Button(row2, text="全选改动", command=self._select_new).pack(side="left", padx=2)
+        ttk.Button(row2, text=tr("全选"), command=lambda: self._toggle_all(True)).pack(side="left", padx=2)
+        ttk.Button(row2, text=tr("取消选择"), command=lambda: self._toggle_all(False)).pack(side="left", padx=2)
+        ttk.Button(row2, text=tr("全选改动"), command=self._select_new).pack(side="left", padx=2)
         ttk.Separator(row2, orient="vertical").pack(side="left", fill="y", padx=6)
 
-        ttk.Label(row2, text="筛选:").pack(side="left", padx=2)
-        self.filter_status_var = tk.StringVar(value="全部")
+        ttk.Label(row2, text=tr("筛选:")).pack(side="left", padx=2)
+        self.filter_status_var = tk.StringVar(value=tr("全部"))
         self.filter_combo = ttk.Combobox(
             row2,
             textvariable=self.filter_status_var,
-            values=["全部", "新文件", "已修改", "已下载", "隐藏"],
+            values=[tr("全部"), tr("新文件"), tr("已修改"), tr("已下载"), tr("隐藏")],
             state="readonly",
             width=8,
         )
@@ -489,28 +818,28 @@ class DownloadPanel:
         self.filter_combo.bind("<<ComboboxSelected>>", lambda e: self._apply_filter())
 
         ttk.Separator(row2, orient="vertical").pack(side="left", fill="y", padx=6)
-        ttk.Button(row2, text="下载所选文件", command=self._do_download).pack(side="left", padx=2)
-        ttk.Button(row2, text="取消", command=self._cancel).pack(side="left", padx=2)
+        ttk.Button(row2, text=tr("下载所选文件"), command=self._do_download).pack(side="left", padx=2)
+        ttk.Button(row2, text=tr("取消"), command=self._cancel).pack(side="left", padx=2)
 
         row3 = ttk.Frame(self.frame, padding=(5, 0))
         row3.pack(fill="x")
 
-        ttk.Label(row3, text="输出：").pack(side="left")
+        ttk.Label(row3, text=tr("输出：")).pack(side="left")
         self.output_var = tk.StringVar(value=str(self.output_dir))
         ttk.Entry(row3, textvariable=self.output_var, width=30).pack(side="left", padx=2)
-        ttk.Button(row3, text="自定义文件夹", command=self._browse_output).pack(side="left")
+        ttk.Button(row3, text=tr("自定义文件夹"), command=self._browse_output).pack(side="left")
 
         ttk.Separator(row3, orient="vertical").pack(side="left", fill="y", padx=6)
         self.auto_refresh_var = tk.BooleanVar(value=False)
         self.auto_cb = ttk.Checkbutton(
             row3,
-            text="自动刷新",
+            text=tr("自动刷新"),
             variable=self.auto_refresh_var,
             command=self._on_auto_refresh_toggle,
         )
         self.auto_cb.pack(side="left", padx=(2, 2))
 
-        ttk.Label(row3, text="间隔(分):").pack(side="left")
+        ttk.Label(row3, text=tr("间隔(分):")).pack(side="left")
         self.interval_var = tk.StringVar(value="5")
         self.interval_combo = ttk.Combobox(
             row3,
@@ -529,8 +858,8 @@ class DownloadPanel:
             tree_frame, columns=columns, show="tree headings",
             selectmode="extended",
         )
-        self.tree.heading("#0", text="文件名", anchor="w")
-        self.tree.heading("status", text="状态", anchor="w")
+        self.tree.heading("#0", text=tr("文件名"), anchor="w")
+        self.tree.heading("status", text=tr("状态"), anchor="w")
         self.tree.column("#0", width=600, stretch=True)
         self.tree.column("status", width=120, anchor="w", stretch=False)
 
@@ -552,7 +881,7 @@ class DownloadPanel:
         self.progress = ttk.Progressbar(bottom_frame, mode="determinate")
         self.progress.pack(side="left", fill="x", expand=True)
 
-        self.status_bar = ttk.Label(self.frame, text="就绪，请连接并扫描。", anchor="w")
+        self.status_bar = ttk.Label(self.frame, text=tr("就绪，请连接并扫描。"), anchor="w")
         self.status_bar.pack(fill="x", padx=5, pady=(0, 5))
 
     
@@ -651,14 +980,14 @@ class DownloadPanel:
         sha = f["sha"]
         if sp in self.manifest:
             if sha and self.manifest[sp] != sha:
-                return "已修改", "changed"
+                return tr("已修改"), "changed"
             local_path = self.output_dir / sanitize_path(sp)
             if local_path.exists():
                 if self.session_downloaded_kinds.get(sp) == "changed":
-                    return "已下载（已修改）", "downloaded"
-                return "已下载", "downloaded"
-            return "已修改", "changed"
-        return "新文件", "new"
+                    return tr("已下载（已修改）"), "downloaded"
+                return tr("已下载"), "downloaded"
+            return tr("已修改"), "changed"
+        return tr("新文件"), "new"
 
     def _populate_tree(self):
         self.tree.delete(*self.tree.get_children())
@@ -687,10 +1016,10 @@ class DownloadPanel:
         if filter_val == "全部":
             return
         status_map = {
-            "新文件": "new",
-            "已修改": "changed",
-            "已下载": "downloaded",
-            "隐藏": "hidden",
+            tr("新文件"): "new",
+            tr("已修改"): "changed",
+            tr("已下载"): "downloaded",
+            tr("隐藏"): "hidden",
         }
         target = status_map.get(filter_val)
         if target is None:
@@ -710,8 +1039,8 @@ class DownloadPanel:
     def _select_new(self):
         self.tree.selection_remove(*self.tree.selection())
         for item in self.tree.get_children():
-            vals = self.tree.item(item, "values")
-            if vals and vals[0] in ("新文件", "已修改"):
+            tags = self.tree.item(item, "tags")
+            if "new" in tags or "changed" in tags:
                 self.tree.selection_add(item)
 
     def _toggle_selected(self):
@@ -734,22 +1063,22 @@ class DownloadPanel:
             try:
                 text = local_path.read_text("utf-8", errors="replace")
             except Exception:
-                mb.showinfo("预览", f"无法预览二进制文件:\n{sp}")
+                mb.showinfo(tr("预览: "), tr("无法预览二进制文件:\n") + sp)
                 return
         else:
             if not self.client:
                 return
             try:
-                self.status_bar.config(text=f"正在下载 {sp} 用于预览...")
+                self.status_bar.config(text=tr("正在下载 {sp} 用于预览...").format(sp=sp))
                 data = self.client.download(f["id"])
                 text = data.decode("utf-8", errors="replace")
             except Exception as e:
-                mb.showerror("错误", str(e))
+                mb.showerror(tr("错误"), str(e))
                 return
-            self.status_bar.config(text="就绪。")
+            self.status_bar.config(text=tr("就绪。"))
 
         pw = tk.Toplevel(self.top)
-        pw.title(f"预览: {sp}")
+        pw.title(tr("预览: ") + sp)
         pw.geometry("700x500")
         txt = tk.Text(pw, wrap="word", font=("Consolas", 10))
         txt.insert("1.0", text)
@@ -779,11 +1108,11 @@ class DownloadPanel:
 
         if not auto:
             self.connect_btn.config(state="disabled")
-            self.scan_status.config(text="正在连接...")
-            self.status_bar.config(text="正在扫描服务器...")
+            self.scan_status.config(text=tr("正在连接..."))
+            self.status_bar.config(text=tr("正在扫描服务器..."))
         else:
-            self.scan_status.config(text="自动刷新中...")
-            self.status_bar.config(text="自动刷新扫描服务器...")
+            self.scan_status.config(text=tr("自动刷新中..."))
+            self.status_bar.config(text=tr("自动刷新扫描服务器..."))
 
         def task():
             try:
@@ -792,9 +1121,9 @@ class DownloadPanel:
                 user = self._get_val(self.user_var, "username").strip()
                 pwd = self._get_val(self.pass_var, "password")
                 if not host or not port_str:
-                    raise RuntimeError("请先在顶部填写服务器地址和端口")
+                    raise RuntimeError(tr("请先在顶部填写服务器地址和端口"))
                 if not user or not pwd:
-                    raise RuntimeError("请先填写用户名和密码")
+                    raise RuntimeError(tr("请先填写用户名和密码"))
                 port = int(port_str)
 
                 c = CFMSClient(host, port,
@@ -807,16 +1136,15 @@ class DownloadPanel:
                 self.client = c
                 self._save_settings()
 
-                self.top.after(0, lambda: self.scan_status.config(text="正在扫描..."))
+                self.top.after(0, lambda: self.scan_status.config(text=tr("正在扫描...")))
                 files = scan_server(c)
                 self.files = files
 
                 def done():
                     self._populate_tree()
-                    self.scan_status.config(text=f"共找到 {len(files)} 个文件")
+                    self.scan_status.config(text=tr("共找到 {n} 个文件").format(n=len(files)))
                     self.status_bar.config(
-                        text=f"扫描结束，共找到 {len(files)} 个文件。"
-                             "蓝色-新文件，紫色-隐藏文件，红色-已修改文件"
+                        text=tr("扫描结束，共找到 {n} 个文件。蓝色-新文件，紫色-隐藏文件，红色-已修改文件").format(n=len(files))
                     )
                     if not auto:
                         self.connect_btn.config(state="normal")
@@ -829,17 +1157,17 @@ class DownloadPanel:
 
                 def fail():
                     if auto:
-                        self.scan_status.config(text="自动刷新失败")
-                        self.status_bar.config(text=f"自动刷新错误：{err_msg}")
+                        self.scan_status.config(text=tr("自动刷新失败"))
+                        self.status_bar.config(text=tr("自动刷新错误：") + err_msg)
                         try:
                             self.toolbox._notify(
-                                "自动刷新错误", err_msg)
+                                tr("自动刷新错误："), err_msg)
                         except Exception:
                             pass
                     else:
-                        mb.showerror("扫描错误", err_msg)
-                        self.scan_status.config(text="失败")
-                        self.status_bar.config(text=f"错误：{err_msg}")
+                        mb.showerror(tr("扫描错误"), err_msg)
+                        self.scan_status.config(text=tr("失败"))
+                        self.status_bar.config(text=tr("错误") + f"：{err_msg}")
                     if not auto:
                         self.connect_btn.config(state="normal")
                     self.scanning = False
@@ -852,19 +1180,21 @@ class DownloadPanel:
         new_count = 0
         changed_count = 0
         for f in self.files:
-            status, _ = self._file_status(f)
-            if status == "新文件":
+            status, tag = self._file_status(f)
+            if tag == "new":
                 new_count += 1
-            elif status == "已修改":
+            elif tag == "changed":
                 changed_count += 1
         if new_count or changed_count:
             self.scan_status.config(
-                text=f"发现 {new_count} 个新文件 / {changed_count} 个已修改"
+                text=tr("发现 {n} 个新文件 / {m} 个已修改").format(
+                    n=new_count, m=changed_count)
             )
             try:
                 self.toolbox._notify(
-                    "扫描发现",
-                    f"新增 {new_count} 个文件，{changed_count} 个已修改。")
+                    tr("扫描发现"),
+                    tr("新增 {n} 个文件，{m} 个已修改。").format(
+                        n=new_count, m=changed_count))
             except Exception:
                 pass
 
@@ -873,7 +1203,7 @@ class DownloadPanel:
             return
         sel = self.tree.selection()
         if not sel:
-            mb.showinfo("提示", "请先选择要下载的文件")
+            mb.showinfo(tr("提示"), tr("请先选择要下载的文件"))
             return
 
         indices = [self.tree.index(s) for s in sel]
@@ -885,7 +1215,7 @@ class DownloadPanel:
 
         out = self.output_var.get().strip()
         if not out:
-            mb.showinfo("提示", "请先设置输出文件夹（点击「自定义文件夹」选择保存位置）。")
+            mb.showinfo(tr("提示"), tr("请先设置输出文件夹（点击「自定义文件夹」选择保存位置）。"))
             return
         self.output_dir = Path(out)
         self._save_settings()
@@ -919,7 +1249,8 @@ class DownloadPanel:
                     kind = "new"
 
                 self.top.after(0, lambda i=i, sp=sp, total=total_files: (
-                    self.status_bar.config(text=f"正在下载 [{i+1}/{total}] {sp} ..."),
+                self.status_bar.config(text=tr("正在下载 [{i}/{n}] {sp} ...").format(
+                    i=i + 1, n=total, sp=sp)),
                     self.progress.configure(value=i + 1)
                 ))
 
@@ -940,7 +1271,7 @@ class DownloadPanel:
                 except Exception as e:
                     failed += 1
                     self.top.after(0, lambda sp=sp, e=e: (
-                        mb.showwarning("下载出错", f"{sp}\n{str(e)}")
+                    mb.showwarning(tr("下载出错"), f"{sp}\n{str(e)}")
                     ))
 
             self._save_manifest()
@@ -950,8 +1281,9 @@ class DownloadPanel:
                 self.progress["value"] = total_files
                 self._populate_tree()
                 self.status_bar.config(
-                    text=f"下载完成：{downloaded} 个文件成功，{failed} 个失败，"
-                         f"跳过 {total_files - downloaded - failed} 个"
+                    text=tr("下载完成：{d} 个文件成功，{f} 个失败，跳过 {s} 个").format(
+                        d=downloaded, f=failed,
+                        s=total_files - downloaded - failed)
                 )
 
             self.top.after(0, done)
@@ -961,7 +1293,7 @@ class DownloadPanel:
     def _cancel(self):
         if self.downloading:
             self.cancel_download = True
-            self.status_bar.config(text="正在取消...")
+            self.status_bar.config(text=tr("正在取消..."))
 
     def shutdown(self):
         try:
@@ -1061,14 +1393,14 @@ class QuickViewPanel:
 
     def _show_help(self) -> None:
         dlg = tk.Toplevel(self.top)
-        dlg.title("帮助")
+        dlg.title(tr("帮助"))
         dlg.geometry("420x300")
         dlg.resizable(False, False)
         dlg.transient(self.top)
         dlg.grab_set()
         self._center_window(dlg, 420, 300)
 
-        tk.Label(dlg, text=f"{APP_TITLE} - 快速查看",
+        tk.Label(dlg, text=f"{APP_TITLE} - {tr('快速查看')}",
                  font=("Microsoft YaHei", 12, "bold")).pack(pady=(16, 10))
         tk.Label(dlg, text=(
             "读取已下载的 .runtime/chatbox 下的聊天记录，\n"
@@ -1087,12 +1419,12 @@ class QuickViewPanel:
                  font=("Microsoft YaHei", 10, "bold"),
                  fg="#2980b9").pack(pady=(12, 6))
 
-        tk.Button(dlg, text="确定", command=dlg.destroy,
+        tk.Button(dlg, text=tr("确定"), command=dlg.destroy,
                   font=("Microsoft YaHei", 10), padx=20).pack(pady=(4, 12))
 
     def _show_settings(self) -> None:
         dlg = tk.Toplevel(self.top)
-        dlg.title("设置")
+        dlg.title(tr("设置"))
         dlg.geometry("600x460")
         dlg.resizable(False, False)
         dlg.transient(self.top)
@@ -1103,18 +1435,18 @@ class QuickViewPanel:
         nb.pack(fill="both", expand=True, padx=8, pady=8)
 
         tab1 = ttk.Frame(nb)
-        nb.add(tab1, text="文件夹")
+        nb.add(tab1, text=tr("文件夹"))
 
-        ttk.Label(tab1, text="chatbox 文件夹路径:",
+        ttk.Label(tab1, text=tr("chatbox 文件夹路径:"),
                   font=("Microsoft YaHei", 10)).pack(anchor="w", padx=16, pady=(16, 6))
         path_var = tk.StringVar(value=self.chatbox_path)
         path_entry = ttk.Entry(tab1, textvariable=path_var, width=70)
         path_entry.pack(padx=16, pady=2, fill="x")
-        ttk.Button(tab1, text="浏览…", command=lambda: self._browse_settings(path_var)).pack(
+        ttk.Button(tab1, text=tr("浏览…"), command=lambda: self._browse_settings(path_var)).pack(
             anchor="w", padx=16, pady=(4, 12))
 
         tab2 = ttk.Frame(nb)
-        nb.add(tab2, text="房间名")
+        nb.add(tab2, text=tr("房间名"))
 
         room_frame = tk.Frame(tab2, bg="#f0f0f0")
         room_frame.pack(fill="both", expand=True, padx=8, pady=8)
@@ -1137,7 +1469,7 @@ class QuickViewPanel:
             disp = f"{cname if cname else '(默认)'}   → {rid}"
             room_lb.insert("end", disp)
 
-        ttk.Label(tab2, text="双击列表项可编辑房间名",
+        ttk.Label(tab2, text=tr("双击列表项可编辑房间名"),
                   font=("Microsoft YaHei", 8), foreground="#888").pack(anchor="w", padx=12, pady=(0, 6))
 
         def room_dblclick(e):
@@ -1147,8 +1479,8 @@ class QuickViewPanel:
             idx = sel[0]
             rid, _ = room_items[idx]
             old = self.room_names.get(rid, "")
-            new = simpledialog.askstring("重命名房间",
-                f"房间 {rid[:16]}…\n输入自定义名称(留空恢复默认):",
+            new = simpledialog.askstring(tr("重命名房间"),
+                tr("房间 {r}…\n输入自定义名称(留空恢复默认):").format(r=rid[:16]),
                 initialvalue=old, parent=dlg)
             if new is not None:
                 if new.strip():
@@ -1164,7 +1496,7 @@ class QuickViewPanel:
         room_lb.bind("<MouseWheel>", lambda e: room_lb.yview_scroll(int(-1 * (e.delta / 120)), "units"))
 
         tab3 = ttk.Frame(nb)
-        nb.add(tab3, text="用户名")
+        nb.add(tab3, text=tr("用户名"))
 
         user_frame = tk.Frame(tab3, bg="#f0f0f0")
         user_frame.pack(fill="both", expand=True, padx=8, pady=8)
@@ -1188,7 +1520,7 @@ class QuickViewPanel:
             disp = f"{cname if cname else '(默认)'}   → {uid}"
             user_lb.insert("end", disp)
 
-        ttk.Label(tab3, text="双击列表项可编辑用户名",
+        ttk.Label(tab3, text=tr("双击列表项可编辑用户名"),
                   font=("Microsoft YaHei", 8), foreground="#888").pack(anchor="w", padx=12, pady=(0, 6))
 
         def user_dblclick(e):
@@ -1198,8 +1530,8 @@ class QuickViewPanel:
             idx = sel[0]
             uid = user_items[idx]
             old = self.user_names.get(uid, "")
-            new = simpledialog.askstring("重命名用户",
-                f"用户 {uid[:16]}…\n输入自定义名称(留空恢复默认):",
+            new = simpledialog.askstring(tr("重命名用户"),
+                tr("用户 {u}…\n输入自定义名称(留空恢复默认):").format(u=uid[:16]),
                 initialvalue=old, parent=dlg)
             if new is not None:
                 if new.strip():
@@ -1224,8 +1556,8 @@ class QuickViewPanel:
 
         btn_frame = ttk.Frame(dlg)
         btn_frame.pack(fill="x", padx=8, pady=(0, 10))
-        ttk.Button(btn_frame, text="确定", command=save_path).pack(side="right", padx=4)
-        ttk.Button(btn_frame, text="取消", command=dlg.destroy).pack(side="right", padx=4)
+        ttk.Button(btn_frame, text=tr("确定"), command=save_path).pack(side="right", padx=4)
+        ttk.Button(btn_frame, text=tr("取消"), command=dlg.destroy).pack(side="right", padx=4)
 
     def _browse_settings(self, path_var):
         d = filedialog.askdirectory(title="选择 .runtime/chatbox 文件夹")
@@ -1237,10 +1569,10 @@ class QuickViewPanel:
         tbar = ttk.Frame(self.frame, padding=(8, 6))
         tbar.pack(fill="x")
 
-        ttk.Button(tbar, text="选择文件夹", command=self._pick_folder).pack(side="left")
-        ttk.Button(tbar, text="刷新", command=self._scan).pack(side="left", padx=(6, 0))
-        ttk.Button(tbar, text="设置", command=self._show_settings).pack(side="left", padx=(6, 0))
-        ttk.Button(tbar, text="帮助", command=self._show_help).pack(side="left", padx=(6, 0))
+        ttk.Button(tbar, text=tr("选择文件夹"), command=self._pick_folder).pack(side="left")
+        ttk.Button(tbar, text=tr("刷新"), command=self._scan).pack(side="left", padx=(6, 0))
+        ttk.Button(tbar, text=tr("设置"), command=self._show_settings).pack(side="left", padx=(6, 0))
+        ttk.Button(tbar, text=tr("帮助"), command=self._show_help).pack(side="left", padx=(6, 0))
 
         self._path_lbl = ttk.Label(tbar, text="", foreground="#888")
         self._path_lbl.pack(side="left", padx=(12, 0))
@@ -1314,7 +1646,7 @@ class QuickViewPanel:
         self._attach_frame.grid(row=1, column=0, columnspan=2, sticky="ew")
         self._attach_frame.grid_propagate(False)
 
-        self._status_lbl = ttk.Label(self.frame, text="就绪", anchor="w",
+        self._status_lbl = ttk.Label(self.frame, text=tr("就绪"), anchor="w",
                                       padding=(8, 2))
         self._status_lbl.pack(fill="x")
 
@@ -1361,8 +1693,8 @@ class QuickViewPanel:
             if self.cfg.get("chatbox_path"):
                 self._load_cfg()
         if not self.chatbox_path or not os.path.isdir(self.chatbox_path):
-            self._path_lbl.config(text="请选择 chatbox 文件夹")
-            self._status_lbl.config(text="未选择文件夹")
+            self._path_lbl.config(text=tr("请选择 chatbox 文件夹"))
+            self._status_lbl.config(text=tr("未选择文件夹"))
             return
 
         self._path_lbl.config(text=self.chatbox_path)
@@ -1393,7 +1725,7 @@ class QuickViewPanel:
             }
 
         self._render_room_list()
-        self._status_lbl.config(text=f"共 {len(self.rooms)} 个聊天室")
+        self._status_lbl.config(text=tr("共 {n} 个聊天室").format(n=len(self.rooms)))
         if self.rooms:
             if self._cur_room not in self.rooms:
                 self._cur_room = next(iter(self.rooms))
@@ -1504,7 +1836,7 @@ class QuickViewPanel:
             return
         old = self.room_names.get(rid, "")
         new = simpledialog.askstring(
-            "重命名房间", "输入自定义房间名:",
+            tr("重命名房间"), tr("输入自定义房间名:"),
             initialvalue=old, parent=self.top)
         if new and new.strip():
             self.room_names[rid] = new.strip()
@@ -1530,7 +1862,7 @@ class QuickViewPanel:
         atts = room["attachments"]
 
         if not msgs:
-            tk.Label(self._msg_frame, text="暂无消息", bg="#f0f0f0",
+            tk.Label(self._msg_frame, text=tr("暂无消息"), bg="#f0f0f0",
                      fg="#999", font=("Microsoft YaHei", 12)).pack(pady=60)
         else:
             user_order: list[str] = []
@@ -1649,7 +1981,7 @@ class QuickViewPanel:
                 txt.configure(state="disabled")
 
         if atts:
-            tk.Label(self._attach_frame, text="附件:",
+            tk.Label(self._attach_frame, text=tr("附件:"),
                      font=("Microsoft YaHei", 8, "bold"),
                      fg="#666", bg="#e0e0e0").pack(side="left", padx=(10, 6))
             for i, fp in enumerate(atts, 1):
@@ -1662,7 +1994,7 @@ class QuickViewPanel:
                 )
                 btn.pack(side="left", padx=4, pady=4)
         else:
-            tk.Label(self._attach_frame, text="无附件",
+            tk.Label(self._attach_frame, text=tr("无附件"),
                      font=("Microsoft YaHei", 8),
                      fg="#bbb", bg="#e0e0e0").pack(side="left", padx=10)
 
@@ -1671,7 +2003,7 @@ class QuickViewPanel:
             nf_count = sum(len(item["lines"]) for item in nf)
             tk.Button(
                 self._attach_frame,
-                text=f"非格式文本 ({nf_count})",
+                text=tr("非格式文本 ({n})").format(n=nf_count),
                 font=("Microsoft YaHei", 8),
                 bg="#fff3e0", fg="#a0522d", relief="groove", bd=1,
                 cursor="hand2",
@@ -1688,10 +2020,10 @@ class QuickViewPanel:
             return
         nf = room.get("nonformat") or []
         if not nf:
-            mb.showinfo("非格式文本", "当前聊天室没有检测到非格式文本。")
+            mb.showinfo(tr("非格式文本"), tr("当前聊天室没有检测到非格式文本。"))
             return
         dlg = tk.Toplevel(self.top)
-        dlg.title(f"非格式文本 - {room['name']}")
+        dlg.title(tr("非格式文本") + f" - {room['name']}")
         dlg.transient(self.top)
         W, H = 560, 420
         dlg.geometry(f"{W}x{H}")
@@ -1717,7 +2049,7 @@ class QuickViewPanel:
 
     def _handle_url(self, url: str) -> None:
         dlg = tk.Toplevel(self.top)
-        dlg.title("链接")
+        dlg.title(tr("链接"))
         dlg.geometry("420x140")
         dlg.resizable(False, False)
         dlg.transient(self.top)
@@ -1742,9 +2074,9 @@ class QuickViewPanel:
             self.top.clipboard_append(url)
             dlg.destroy()
 
-        tk.Button(btn_frame, text="打开链接", command=do_open,
+        tk.Button(btn_frame, text=tr("打开链接"), command=do_open,
                   font=("Microsoft YaHei", 10), padx=16).pack(side="left", padx=6)
-        tk.Button(btn_frame, text="复制链接", command=do_copy,
+        tk.Button(btn_frame, text=tr("复制链接"), command=do_copy,
                   font=("Microsoft YaHei", 10), padx=16).pack(side="left", padx=6)
 
     def _center_window(self, win, w, h):
@@ -1760,7 +2092,7 @@ class QuickViewPanel:
     def _rename_user(self, uid: str) -> None:
         old = self.user_names.get(uid, "")
         new = simpledialog.askstring(
-            "重命名用户", f"为 {uid[:10]}… 输入自定义名称:",
+            tr("重命名用户"), tr("为 {uid}… 输入自定义名称:").format(uid=uid[:10]),
             initialvalue=old, parent=self.top)
         if new and new.strip():
             self.user_names[uid] = new.strip()
@@ -2727,24 +3059,24 @@ class HtmlGenPanel:
         pad = ttk.Frame(self.frame, padding=16)
         pad.pack(fill="both", expand=True)
 
-        ttk.Label(pad, text="生成微信风格聊天记录网页",
+        ttk.Label(pad, text=tr("生成微信风格聊天记录网页"),
                   font=("Microsoft YaHei", 14, "bold")).pack(anchor="w")
-        ttk.Label(pad, text="数据源为下载后的 .runtime/chatbox 文件夹，"
-                            "HTML 将保存到本程序所在目录并自动用浏览器打开。",
+        ttk.Label(pad, text=tr("数据源为下载后的 .runtime/chatbox 文件夹，"
+                               "HTML 将保存到本程序所在目录并自动用浏览器打开。"),
                   foreground="#666").pack(anchor="w", pady=(4, 10))
 
         path_row = ttk.Frame(pad)
         path_row.pack(fill="x", pady=6)
-        ttk.Label(path_row, text="聊天数据：").pack(side="left")
+        ttk.Label(path_row, text=tr("聊天数据：")).pack(side="left")
         self.path_lbl = ttk.Label(path_row, text="", foreground="#1a6fb5")
         self.path_lbl.pack(side="left", padx=4)
-        ttk.Button(path_row, text="选择文件夹", command=self._pick_folder).pack(side="left", padx=4)
+        ttk.Button(path_row, text=tr("选择文件夹"), command=self._pick_folder).pack(side="left", padx=4)
 
         self.gen_btn = ttk.Button(
-            pad, text="⚙  生成 HTML 并自动打开", command=self._generate, width=28)
+            pad, text=tr("⚙  生成 HTML 并自动打开"), command=self._generate, width=28)
         self.gen_btn.pack(anchor="w", pady=12)
 
-        ttk.Label(pad, text="输出文件：", foreground="#888").pack(anchor="w")
+        ttk.Label(pad, text=tr("输出文件："), foreground="#888").pack(anchor="w")
         self.out_lbl = ttk.Label(pad, text="", foreground="#666")
         self.out_lbl.pack(anchor="w", pady=(0, 8))
 
@@ -2759,7 +3091,7 @@ class HtmlGenPanel:
 
     def _pick_folder(self) -> None:
         d = filedialog.askdirectory(initialdir=self._chatbox_path(),
-                                    title="选择 chatbox 文件夹（含各聊天室子文件夹）")
+                                    title=tr("请选择 chatbox 文件夹（含各聊天室子文件夹）"))
         if d:
             self.cfg["chatbox_path"] = d
             self.toolbox.save_config()
@@ -2780,12 +3112,12 @@ class HtmlGenPanel:
         chatbox = self._chatbox_path()
         if not Path(chatbox).is_dir():
             mb.showerror(
-                "错误",
-                f"聊天数据文件夹不存在：\n{chatbox}\n\n"
-                "请先在「下载」页下载数据，或点击「选择文件夹」手动指定。")
+                tr("错误"),
+                tr("聊天数据文件夹不存在：\n{path}\n\n").format(path=chatbox)
+                + tr("请先在「下载」页下载数据，或点击「选择文件夹」手动指定。"))
             return
         self.gen_btn.config(state="disabled")
-        self._log("开始生成……")
+        self._log(tr("开始生成……"))
 
         def task():
             global CHATBOX_DIR, USER_NAME_MAP, ROOM_NAME_MAP, DATE_GROUP_NAMES
@@ -2860,7 +3192,7 @@ class HtmlGenPanel:
                     CHATBOX_DIR = chatbox_dir
                     rooms = load_all_chats()
                     if not rooms:
-                        raise RuntimeError("未找到任何聊天数据（chatbox 目录为空或无消息）")
+                        raise RuntimeError(tr("未找到任何聊天数据（chatbox 目录为空或无消息）"))
                     total = sum(len(msgs) for msgs in rooms.values())
                     html = generate_html(rooms)
                     out = APP_DIR / f"chat_output_{datetime.now():%Y-%m-%d}.html"
@@ -2878,42 +3210,456 @@ class HtmlGenPanel:
 
     def _done(self, out: Path, rooms: int, total: int) -> None:
         self.gen_btn.config(state="normal")
-        self._log(f"✅ 已生成：{out}")
-        self._log(f"   共 {rooms} 个会话房间，{total} 条消息")
+        self._log(tr("✅ 已生成：") + str(out))
+        self._log("   " + tr("共 {n} 个会话房间，{m} 条消息").format(n=rooms, m=total))
         try:
             os.startfile(str(out))
-            self._log("已用默认浏览器打开。")
+            self._log(tr("已用默认浏览器打开。"))
         except Exception as e:
-            self._log(f"自动打开失败（可手动打开）：{e}")
+            self._log(tr("自动打开失败（可手动打开）：") + str(e))
 
     def _fail(self, err: str) -> None:
         self.gen_btn.config(state="normal")
-        self._log(f"❌ 生成失败：{err}")
-        mb.showerror("生成失败", err)
+        self._log("❌ " + tr("生成失败") + f"：{err}")
+        mb.showerror(tr("生成失败"), err)
+
+
+MORSE_MAP = {
+    "A": ".-", "B": "-...", "C": "-.-.", "D": "-..", "E": ".",
+    "F": "..-.", "G": "--.", "H": "....", "I": "..", "J": ".---",
+    "K": "-.-", "L": ".-..", "M": "--", "N": "-.", "O": "---",
+    "P": ".--.", "Q": "--.-", "R": ".-.", "S": "...", "T": "-",
+    "U": "..-", "V": "...-", "W": ".--", "X": "-..-", "Y": "-.--",
+    "Z": "--..",
+    "0": "-----", "1": ".----", "2": "..---", "3": "...--", "4": "....-",
+    "5": ".....", "6": "-....", "7": "--...", "8": "---..", "9": "----.",
+    ".": ".-.-.-", ",": "--..--", "?": "..--..", "'": ".----.",
+    "!": "-.-.--", "/": "-..-.", "(": "-.--.", ")": "-.--.-",
+    "&": ".-...", ":": "---...", ";": "-.-.-.", "=": "-...-",
+    "+": ".-.-.", "-": "-....-", "_": "..--.-", '"': ".-..-.",
+    "$": "...-..-", "@": ".--.-.",
+}
+MORSE_REV = {v: k for k, v in MORSE_MAP.items()}
+
+
+def _caesar_shift(text: str, shift: int) -> str:
+    out = []
+    for ch in text:
+        if "A" <= ch <= "Z":
+            out.append(chr((ord(ch) - 65 + shift) % 26 + 65))
+        elif "a" <= ch <= "z":
+            out.append(chr((ord(ch) - 97 + shift) % 26 + 97))
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def _caesar_enc(text: str, keys: list[str]) -> str:
+    try:
+        shift = int(keys[0].strip() or "0") % 26
+    except ValueError:
+        raise ValueError(tr("位移必须是整数"))
+    return _caesar_shift(text, shift)
+
+
+def _caesar_dec(text: str, keys: list[str]) -> str:
+    try:
+        shift = int(keys[0].strip() or "0") % 26
+    except ValueError:
+        raise ValueError(tr("位移必须是整数"))
+    return _caesar_shift(text, -shift)
+
+
+def _vigenere_enc(text: str, keys: list[str]) -> str:
+    key = keys[0]
+    ks = [ord(c) - 65 for c in key.upper() if "A" <= c <= "Z"]
+    if not ks:
+        raise ValueError(tr("密钥必须包含字母"))
+    out = []
+    ki = 0
+    for ch in text:
+        if "A" <= ch <= "Z":
+            out.append(chr((ord(ch) - 65 + ks[ki % len(ks)]) % 26 + 65))
+            ki += 1
+        elif "a" <= ch <= "z":
+            out.append(chr((ord(ch) - 97 + ks[ki % len(ks)]) % 26 + 97))
+            ki += 1
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def _vigenere_dec(text: str, keys: list[str]) -> str:
+    key = keys[0]
+    ks = [ord(c) - 65 for c in key.upper() if "A" <= c <= "Z"]
+    if not ks:
+        raise ValueError(tr("密钥必须包含字母"))
+    out = []
+    ki = 0
+    for ch in text:
+        if "A" <= ch <= "Z":
+            out.append(chr((ord(ch) - 65 - ks[ki % len(ks)]) % 26 + 65))
+            ki += 1
+        elif "a" <= ch <= "z":
+            out.append(chr((ord(ch) - 97 - ks[ki % len(ks)]) % 26 + 97))
+            ki += 1
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def _b64_enc(text: str, keys: list[str]) -> str:
+    return base64.b64encode(text.encode("utf-8")).decode("ascii")
+
+
+def _b64_dec(text: str, keys: list[str]) -> str:
+    try:
+        raw = base64.b64decode(text.encode("utf-8"), validate=False)
+        return raw.decode("utf-8")
+    except Exception:
+        raise ValueError(tr("BASE64 解码失败，请检查输入内容"))
+
+
+def _morse_enc(text: str, keys: list[str]) -> str:
+    words = []
+    for w in text.upper().split():
+        codes = [MORSE_MAP[c] for c in w if c in MORSE_MAP]
+        if codes:
+            words.append(" ".join(codes))
+    return " / ".join(words)
+
+
+def _morse_dec(text: str, keys: list[str]) -> str:
+    words = []
+    for w in text.replace("／", "/").split("/"):
+        chars = [MORSE_REV[c] for c in w.split() if c in MORSE_REV]
+        if chars:
+            words.append("".join(chars))
+    return " ".join(words)
+
+
+def _sha256(text: str, keys: list[str]) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _ascii_enc(text: str, keys: list[str]) -> str:
+    return " ".join(str(ord(c)) for c in text)
+
+
+def _ascii_dec(text: str, keys: list[str]) -> str:
+    parts = [p for p in re.split(r"[\s,，、;；]+", text.strip()) if p]
+    if not parts:
+        raise ValueError(tr("没有可解析的数字"))
+    out = []
+    for p in parts:
+        try:
+            n = int(p, 0)
+        except ValueError:
+            raise ValueError(tr("无法解析的数字：{p}").format(p=p))
+        if n < 0 or n > 0x10FFFF:
+            raise ValueError(tr("超出 Unicode 范围：{n}").format(n=n))
+        out.append(chr(n))
+    return "".join(out)
+
+
+_RADIX_DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def _radix_convert(text: str, src: int, dst: int) -> str:
+    text = text.strip()
+    if not text:
+        raise ValueError(tr("请输入数字"))
+    try:
+        n = int(text, src)
+    except ValueError:
+        raise ValueError(tr("无法按 {n} 进制解析输入").format(n=src))
+    neg = n < 0
+    n = abs(n)
+    if n == 0:
+        return "0"
+    out = []
+    while n:
+        out.append(_RADIX_DIGITS[n % dst])
+        n //= dst
+    s = "".join(reversed(out))
+    return ("-" if neg else "") + s
+
+
+def _radix_enc(text: str, keys: list[str]) -> str:
+    try:
+        src = int(keys[0] or "10")
+        dst = int(keys[1] or "16")
+    except ValueError:
+        raise ValueError(tr("进制必须是整数"))
+    if not (2 <= src <= 36) or not (2 <= dst <= 36):
+        raise ValueError(tr("进制必须在 2-36 之间"))
+    return _radix_convert(text, src, dst)
+
+
+def _radix_dec(text: str, keys: list[str]) -> str:
+    try:
+        src = int(keys[0] or "10")
+        dst = int(keys[1] or "16")
+    except ValueError:
+        raise ValueError(tr("进制必须是整数"))
+    if not (2 <= src <= 36) or not (2 <= dst <= 36):
+        raise ValueError(tr("进制必须在 2-36 之间"))
+    return _radix_convert(text, dst, src)
+
+
+def _enc_convert(text: str, src_enc: str, dst_enc: str) -> str:
+    try:
+        raw = text.encode(src_enc)
+        return raw.decode(dst_enc)
+    except Exception as e:
+        raise ValueError(tr("转换失败：{e}").format(e=e))
+
+
+def _enc_convert_enc(text: str, keys: list[str]) -> str:
+    return _enc_convert(text, keys[0], keys[1])
+
+
+def _enc_convert_dec(text: str, keys: list[str]) -> str:
+    return _enc_convert(text, keys[1], keys[0])
+
+
+_ADFGVX_ALPH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+_ADFGVX_SYMS = "ADFGVX"
+
+
+def _adfgvx_grid(key: str) -> tuple[list[str], dict[str, tuple[int, int]]]:
+    seen: list[str] = []
+    for c in key.upper() + _ADFGVX_ALPH:
+        if c in _ADFGVX_ALPH and c not in seen:
+            seen.append(c)
+    grid = [seen[i * 6:(i + 1) * 6] for i in range(6)]
+    pos = {ch: (r, c) for r, row in enumerate(grid) for c, ch in enumerate(row)}
+    return grid, pos
+
+
+def _adfgvx_enc(text: str, keys: list[str]) -> str:
+    key = keys[0].upper()
+    sq = keys[1].upper()
+    if not key:
+        raise ValueError(tr("请输入密钥"))
+    if not sq:
+        raise ValueError(tr("请输入转置密钥"))
+    grid, pos = _adfgvx_grid(key)
+    n = len(sq)
+    plain = "".join(ch for ch in text.upper() if ch in pos)
+    if not plain:
+        raise ValueError(tr("输入中没有任何可加密的字母或数字"))
+    while (2 * len(plain)) % n:
+        plain += "A"
+    syms = "".join(_ADFGVX_SYMS[pos[c][0]] + _ADFGVX_SYMS[pos[c][1]] for c in plain)
+    rows = [syms[i:i + n] for i in range(0, len(syms), n)]
+    order = sorted(range(n), key=lambda i: sq[i])
+    return "".join(rows[r][c] for c in order for r in range(len(rows)))
+
+
+def _adfgvx_dec(text: str, keys: list[str]) -> str:
+    key = keys[0].upper()
+    sq = keys[1].upper()
+    if not key:
+        raise ValueError(tr("请输入密钥"))
+    if not sq:
+        raise ValueError(tr("请输入转置密钥"))
+    grid, pos = _adfgvx_grid(key)
+    rev = {_ADFGVX_SYMS[r] + _ADFGVX_SYMS[c]: grid[r][c]
+           for r in range(6) for c in range(6)}
+    n = len(sq)
+    ct = "".join(ch for ch in text.upper() if ch in _ADFGVX_SYMS)
+    if not ct or len(ct) % n:
+        raise ValueError(tr("密文长度不是 KeySquare 长度的整数倍（请检查 KeySquare）"))
+    rows_n = len(ct) // n
+    order = sorted(range(n), key=lambda i: sq[i])
+    cols: dict[int, str] = {}
+    idx = 0
+    for c in order:
+        cols[c] = ct[idx:idx + rows_n]
+        idx += rows_n
+    syms = "".join(cols[c][r] for r in range(rows_n) for c in range(n))
+    out = []
+    for i in range(0, len(syms), 2):
+        p = syms[i:i + 2]
+        if len(p) < 2:
+            break
+        out.append(rev.get(p, "?"))
+    return "".join(out).rstrip("A")
+
+
+class CryptoPanel:
+    def __init__(self, parent, toolbox):
+        self.toolbox = toolbox
+        self.cfg = toolbox.cfg
+        self.frame = ttk.Frame(parent)
+        self.top = self.frame.winfo_toplevel()
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        nb = ttk.Notebook(self.frame)
+        nb.pack(fill="both", expand=True, padx=6, pady=6)
+        self._add_tab(nb, tr("ASCII"), tr("ASCII：字符与数字编码互相转换（支持 Unicode）。"),
+                      None, _ascii_enc, _ascii_dec)
+        self._add_tab(nb, tr("进制转换"), tr("进制转换：2-36 进制互转（加密=源进制→目标进制，解密=反向）。"),
+                      [(tr("源进制："), "10"), (tr("目标进制："), "16")], _radix_enc, _radix_dec)
+        self._add_tab(nb, tr("BASE64"), tr("BASE64：文本与 BASE64 编码互相转换。"),
+                      None, _b64_enc, _b64_dec)
+        self._add_tab(nb, tr("摩斯电码"), tr("摩斯电码：字母/数字/常用符号与摩斯码互相转换，单词间用 / 分隔。"),
+                      None, _morse_enc, _morse_dec)
+        self._add_tab(nb, tr("凯撒密码"), tr("凯撒密码：把字母按位移量循环平移（0-25）。"),
+                      [(tr("位移："), "3")], _caesar_enc, _caesar_dec)
+        self._add_tab(nb, tr("弗吉尼亚密码"), tr("弗吉尼亚密码：使用字母密钥逐字符位移。"),
+                      [(tr("密钥："), "")], _vigenere_enc, _vigenere_dec)
+        self._add_tab(nb, tr("ADFGVX密码"), tr("ADFGVX 密码：密钥生成 6×6 方阵，KeySquare 做列置换，解密自动去除填充。"),
+                      [(tr("密钥："), ""), ("KeySquare：", "")], _adfgvx_enc, _adfgvx_dec)
+        enc_opts = ["UTF-8", "GBK", "GB2312", "Big5", "Shift_JIS", "EUC-JP", "ISO-8859-1", "ASCII"]
+        self._add_tab(nb, tr("编码转换"), tr("编码转换：按源编码取字节、再按目标编码显示（常用于乱码修复）。"),
+                      [(tr("源编码："), "UTF-8", enc_opts), (tr("目标编码："), "GBK", enc_opts)],
+                      _enc_convert_enc, _enc_convert_dec)
+        self._add_tab(nb, tr("SHA-256"), tr("SHA-256：对输入文本计算 SHA-256 哈希（十六进制），不可逆。"),
+                      None, _sha256, None)
+
+    def _add_tab(self, nb, text, hint, key_specs, enc_fn, dec_fn):
+        f = ttk.Frame(nb, padding=12)
+        ttk.Label(f, text=hint, foreground="#666", wraplength=760,
+                  justify="left").pack(anchor="w")
+        key_vars: list[tk.StringVar] = []
+        if key_specs:
+            for spec in key_specs:
+                row = ttk.Frame(f)
+                row.pack(fill="x", pady=(6, 0))
+                ttk.Label(row, text=tr(spec[0])).pack(side="left")
+                var = tk.StringVar(value=spec[1])
+                if len(spec) > 2 and spec[2]:
+                    ttk.Combobox(row, textvariable=var, values=spec[2],
+                                 state="readonly", width=34).pack(side="left", padx=6)
+                else:
+                    ttk.Entry(row, textvariable=var, width=48).pack(side="left", padx=6)
+                key_vars.append(var)
+
+        ttk.Label(f, text="输入：").pack(anchor="w", pady=(8, 0))
+        inp = tk.Text(f, height=6, wrap="word", font=("Consolas", 10), undo=True)
+        inp.pack(fill="both", expand=True)
+
+        btns = ttk.Frame(f)
+        btns.pack(fill="x", pady=6)
+        if dec_fn is None:
+            ttk.Button(btns, text=tr("计算"), width=8,
+                       command=lambda: self._run(inp, out, key_vars, enc_fn)).pack(side="left")
+        else:
+            ttk.Button(btns, text=tr("加密"), width=8,
+                       command=lambda: self._run(inp, out, key_vars, enc_fn)).pack(side="left")
+            ttk.Button(btns, text=tr("解密"), width=8,
+                       command=lambda: self._run(inp, out, key_vars, dec_fn)).pack(side="left", padx=6)
+        ttk.Button(btns, text=tr("复制结果"), width=10,
+                   command=lambda: self._copy_out(out)).pack(side="left")
+        ttk.Button(btns, text=tr("清空"), width=8,
+                   command=lambda: (inp.delete("1.0", "end"), out.delete("1.0", "end"))).pack(side="left", padx=6)
+
+        ttk.Label(f, text="输出：").pack(anchor="w")
+        out = tk.Text(f, height=6, wrap="word", font=("Consolas", 10))
+        out.pack(fill="both", expand=True)
+
+        nb.add(f, text=text)
+        return inp, out, key_vars
+
+    def _run(self, inp, out, key_vars, fn) -> None:
+        text = inp.get("1.0", "end-1c")
+        keys = [v.get() for v in key_vars]
+        try:
+            result = fn(text, keys)
+        except ValueError as e:
+            mb.showerror(tr("错误"), str(e))
+            return
+        except Exception as e:
+            mb.showerror(tr("错误"), tr("操作失败：{e}").format(e=e))
+            return
+        out.delete("1.0", "end")
+        out.insert("1.0", result)
+
+    def _copy_out(self, out) -> None:
+        s = out.get("1.0", "end-1c")
+        if not s:
+            return
+        self.top.clipboard_clear()
+        self.top.clipboard_append(s)
+
+
+class SettingsPanel:
+    def __init__(self, parent, toolbox):
+        self.toolbox = toolbox
+        self.cfg = toolbox.cfg
+        self.frame = ttk.Frame(parent)
+        self.top = self.frame.winfo_toplevel()
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        pad = ttk.Frame(self.frame, padding=24)
+        pad.pack(fill="both", expand=True)
+
+        dev_lbl = ttk.Label(
+            pad, text=tr("开发者：") + "Rosmontis220",
+            foreground="#2980b9", cursor="hand2")
+        dev_lbl.pack(side="bottom", pady=(0, 12))
+        dev_lbl.bind(
+            "<Button-1>",
+            lambda e: _open_file("https://github.com/Rosmontis220/cfms-toolbox"))
+
+        ttk.Label(pad, text="语言 / Language / 言語：",
+                  font=("Microsoft YaHei", 11, "bold")).pack(anchor="w")
+        lang_row = ttk.Frame(pad)
+        lang_row.pack(fill="x", pady=(6, 0))
+        self.lang_var = tk.StringVar(value=LANG_NAMES.get(LANG, "中文"))
+        ttk.Combobox(
+            lang_row, textvariable=self.lang_var, state="readonly", width=16,
+            values=list(LANG_DISPLAY.keys()),
+        ).pack(side="left")
+        ttk.Button(lang_row, text=tr("应用"), width=8,
+                   command=self._apply_language).pack(side="left", padx=8)
+
+        ttk.Label(pad, text=tr("切换语言后界面将自动重建，当前页签会保留。"),
+                  foreground="#888").pack(anchor="w", pady=(4, 0))
+
+    def _apply_language(self) -> None:
+        code = LANG_DISPLAY.get(self.lang_var.get(), "zh")
+        self.toolbox.set_language(code)
 
 
 class ToolboxApp:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title(APP_TITLE)
+        self.cfg = load_config()
         self.root.geometry("1280x760")
         self.root.minsize(960, 600)
-        self.cfg = load_config()
         if SPECIAL:
             
             self._migrate_legacy_config()
         self.tray_icon = None
         self.tray_thread = None
         self._closing = False
+        self._build_ui()
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        self._set_window_icon()
+        self._create_tray_icon()
+
+    def _build_ui(self) -> None:
+        for w in self.root.winfo_children():
+            w.destroy()
+        self.root.title(
+            tr("CFMS工具箱") + f" v{APP_VERSION}"
+            + (f" {VARIANT_NAME}" if VARIANT_NAME else ""))
 
         nb = ttk.Notebook(self.root)
         nb.pack(fill="both", expand=True, padx=6, pady=6)
+        self.nb = nb
 
         self.download_panel = DownloadPanel(nb, self)
         self.view_panel = QuickViewPanel(nb, self)
         self.html_panel = HtmlGenPanel(nb, self)
+        self.crypto_panel = CryptoPanel(nb, self)
+        self.settings_panel = SettingsPanel(nb, self)
 
-        
         if not self.view_panel.chatbox_path:
             cand = Path(str(self.cfg.get("output") or "")) / ".runtime" / "chatbox"
             if cand.is_dir():
@@ -2922,14 +3668,25 @@ class ToolboxApp:
                 self.view_panel._scan()
                 self.html_panel._refresh_path_label()
 
-        nb.add(self.download_panel.frame, text="下载")
-        nb.add(self.view_panel.frame, text="快速查看")
-        nb.add(self.html_panel.frame, text="生成网页")
+        nb.add(self.download_panel.frame, text=tr("下载"))
+        nb.add(self.view_panel.frame, text=tr("快速查看"))
+        nb.add(self.html_panel.frame, text=tr("生成网页"))
+        nb.add(self.crypto_panel.frame, text=tr("加解密"))
+        nb.add(self.settings_panel.frame, text="⚙")
         nb.bind("<<NotebookTabChanged>>", self._on_tab_changed)
 
-        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
-        self._set_window_icon()
-        self._create_tray_icon()
+    def set_language(self, code: str) -> None:
+        if code == LANG:
+            return
+        set_lang(code)
+        self.cfg["language"] = code
+        self.save_config()
+        cur = self.nb.index("current") if getattr(self, "nb", None) is not None else 0
+        self._build_ui()
+        try:
+            self.nb.select(cur)
+        except Exception:
+            pass
 
     def save_config(self) -> None:
         save_config(self.cfg)
@@ -3056,8 +3813,8 @@ class ToolboxApp:
         try:
             image = Image.open(io.BytesIO(_icon_bytes())).resize((64, 64))
             menu = pystray.Menu(
-                pystray.MenuItem("显示窗口", self._show_window, default=True),
-                pystray.MenuItem("退出", self._quit_app),
+                pystray.MenuItem(tr("显示窗口"), self._show_window, default=True),
+                pystray.MenuItem(tr("退出"), self._quit_app),
             )
             tray_id = "cfms_toolbox" + ("_special" if SPECIAL else "_regular")
             self.tray_icon = pystray.Icon(tray_id, image, APP_TITLE, menu)
@@ -3115,7 +3872,7 @@ class ToolboxApp:
             self.root.withdraw()
             try:
                 self.tray_icon.notify(
-                    "程序已最小化到托盘，自动刷新仍在运行。",
+                    tr("程序已最小化到托盘，自动刷新仍在运行。"),
                     APP_TITLE)
             except Exception:
                 pass
