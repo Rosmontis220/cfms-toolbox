@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import collections
 import hashlib
+import http.server
 import io
 import json
 import os
@@ -17,6 +18,7 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.parse
 from datetime import datetime
 from ipaddress import IPv4Address
 from pathlib import Path
@@ -48,7 +50,7 @@ def _app_dir() -> Path:
 APP_DIR = _app_dir()
 
 
-APP_VERSION = "1.8.0"
+APP_VERSION = "1.9.0"
 VARIANT_NAME = ""            
 
 SPECIAL = VARIANT_NAME == "遗闻特供版"
@@ -66,7 +68,6 @@ TRANSLATIONS = {
     "en": {
         "CFMS工具箱": "CFMS Toolbox",
         "下载": "Download",
-        "快速查看": "Quick View",
         "生成网页": "Generate HTML",
         "加解密": "Encrypt/Decrypt",
         "显示窗口": "Show Window",
@@ -179,6 +180,13 @@ TRANSLATIONS = {
         "ASCII：字符与数字编码互相转换（支持 Unicode）。": "ASCII: convert between characters and numeric codes (Unicode supported).",
         "进制转换：2-36 进制互转（加密=源进制→目标进制，解密=反向）。": "Base conversion: convert between bases 2-36 (Encrypt=source→target, Decrypt=reverse).",
         "BASE64：文本与 BASE64 编码互相转换。": "BASE64: convert between text and BASE64.",
+        "BASE：支持 BASE64 / BASE58 / BASE62 / BASE85 / BASE91 互转。": "BASE: supports BASE64 / BASE58 / BASE62 / BASE85 / BASE91 conversions.",
+        "编码：": "Encoding: ",
+        "不支持的编码：{e}": "Unsupported encoding: {e}",
+        "解码失败，请检查输入内容和编码类型": "Decode failed; check the input and encoding type",
+        "无效的 Base58 字符：{c}": "Invalid Base58 character: {c}",
+        "无效的 Base62 字符：{c}": "Invalid Base62 character: {c}",
+        "无效的 Base91 字符：{c}": "Invalid Base91 character: {c}",
         "摩斯电码：字母/数字/常用符号与摩斯码互相转换，单词间用 / 分隔。": "Morse code: letters/digits/common symbols; words are separated by /.",
         "凯撒密码：把字母按位移量循环平移（0-25）。": "Caesar cipher: shift letters by an offset (0-25).",
         "维吉尼亚密码：字母或数字密钥逐字符位移，纯数字密钥即为 Gronsfeld 密码。": "Vigenère cipher: shift each letter by a letter or digit key; an all-digit key uses Gronsfeld.",
@@ -249,11 +257,18 @@ TRANSLATIONS = {
         "校验结果：无效": "Checksum: invalid",
         "矩阵每个格子必须填 0-9 的一位数字": "Each cell must contain a single digit 0-9",
         "把 IP 与端口编码为 7×7 谜题矩阵（含干扰数据），也可解码还原与转置。": "Encode an IP and port into a 7×7 puzzle matrix (with decoys); decode and transpose are also supported.",
+        "网页查看": "Web View",
+        "打开网页查看失败：{e}": "Failed to open Web View: {e}",
+        "CFMS聊天记录": "CFMS Chat Log",
+        "条消息": "messages",
+        "最后：": "Last: ",
+        "选择一个房间": "Select a room",
+        "聊天记录": "Chat History",
+        "附件": "Attachments",
     },
     "ja": {
         "CFMS工具箱": "CFMSツールボックス",
         "下载": "ダウンロード",
-        "快速查看": "クイック表示",
         "生成网页": "HTML生成",
         "加解密": "暗号化・復号",
         "显示窗口": "ウィンドウ表示",
@@ -366,6 +381,13 @@ TRANSLATIONS = {
         "ASCII：字符与数字编码互相转换（支持 Unicode）。": "ASCII：文字と数値コードを相互変換（Unicode対応）。",
         "进制转换：2-36 进制互转（加密=源进制→目标进制，解密=反向）。": "進数変換：2〜36進数を相互変換（暗号化=元→先、復号=逆方向）。",
         "BASE64：文本与 BASE64 编码互相转换。": "BASE64：テキストとBASE64を相互変換。",
+        "BASE：支持 BASE64 / BASE58 / BASE62 / BASE85 / BASE91 互转。": "BASE：BASE64/BASE58/BASE62/BASE85/BASE91に対応。",
+        "编码：": "エンコード：",
+        "不支持的编码：{e}": "未対応のエンコード：{e}",
+        "解码失败，请检查输入内容和编码类型": "デコードに失敗しました。入力とエンコード種別を確認してください",
+        "无效的 Base58 字符：{c}": "無効なBase58文字：{c}",
+        "无效的 Base62 字符：{c}": "無効なBase62文字：{c}",
+        "无效的 Base91 字符：{c}": "無効なBase91文字：{c}",
         "摩斯电码：字母/数字/常用符号与摩斯码互相转换，单词间用 / 分隔。": "モールス信号：英字/数字/記号と相互変換。単語間は / で区切ります。",
         "凯撒密码：把字母按位移量循环平移（0-25）。": "シーザー暗号：文字をシフト数で循環移動（0〜25）。",
         "维吉尼亚密码：字母或数字密钥逐字符位移，纯数字密钥即为 Gronsfeld 密码。": "ヴィジュネル暗号：文字または数字キーでずらす。数字のみのキーはグロンスフェルト暗号。",
@@ -436,6 +458,14 @@ TRANSLATIONS = {
         "校验结果：无效": "チェックサム：無効",
         "矩阵每个格子必须填 0-9 的一位数字": "各セルには0〜9の1桁の数字を入力してください",
         "把 IP 与端口编码为 7×7 谜题矩阵（含干扰数据），也可解码还原与转置。": "IPとポートを7×7パズル行列にエンコード（デコイ含む）。デコードと転置も可能。",
+        "网页查看": "ウェブ表示",
+        "打开网页查看失败：{e}": "Web表示を開けませんでした：{e}",
+        "CFMS聊天记录": "CFMSチャットログ",
+        "条消息": "件",
+        "最后：": "最終：",
+        "选择一个房间": "部屋を選択",
+        "聊天记录": "チャット履歴",
+        "附件": "添付",
     },
 }
 
@@ -1412,6 +1442,332 @@ def _open_file(path: str) -> None:
         subprocess.Popen(["start", "", path], shell=True)
 
 
+def _build_webui_data(panel) -> dict:
+    rooms = []
+    for rid, room in panel.rooms.items():
+        msgs = [{
+            "user": m["user"],
+            "name": panel.user_names.get(m["user"], m["user"][:8] + "…"),
+            "time": m["time"],
+            "content": m["content"],
+        } for m in room["msgs"]]
+        atts = []
+        for p in room["attachments"]:
+            ext = p.suffix.lower()
+            if ext in (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"):
+                kind = "image"
+            elif ext in (".mp3", ".wav", ".ogg", ".m4a", ".flac", ".aac"):
+                kind = "audio"
+            else:
+                kind = "other"
+            atts.append({
+                "name": p.name,
+                "url": f"/file/{urllib.parse.quote(rid)}/{urllib.parse.quote(p.name)}",
+                "kind": kind,
+            })
+        nf = [{"file": b["file"], "lines": b["lines"]}
+              for b in (room.get("nonformat") or [])]
+        last_time = msgs[-1]["time"] if msgs else ""
+        rooms.append({
+            "id": rid,
+            "name": panel.room_names.get(rid, rid[:8] + "…"),
+            "msgs": msgs,
+            "attachments": atts,
+            "nonformat": nf,
+            "last_time": last_time,
+        })
+    rooms.sort(key=lambda r: r["last_time"], reverse=True)
+    return {"rooms": rooms}
+
+
+_WEBUI_HTML = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFMS Toolbox</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#141413;color:#fff;font-family:'HarmonyOS Sans SC','MiSans','PingFang SC','Microsoft YaHei',sans-serif}
+#stage{position:absolute;left:50%;top:50%;margin-left:-960px;margin-top:-540px;width:1920px;height:1080px;transform:scale(var(--k));transform-origin:center}
+#tricolor{position:absolute;left:0;top:0;width:100%;height:4px;display:flex;z-index:5}
+#tricolor i{flex:1}
+#tricolor .m{background:#e202e2}
+#tricolor .y{background:#f3f100}
+#tricolor .c{background:#01f1f1}
+#header{position:absolute;left:43px;top:26px;font-size:27px;letter-spacing:-0.5px;color:#fff;z-index:5;font-weight:500;user-select:text}
+#cards{position:absolute;left:0;top:84px;width:560px;bottom:0;overflow-y:auto;padding:12px}
+.card{background:#2b2927;border:1px solid transparent;border-radius:6px;margin-bottom:12px;cursor:pointer}
+.card:hover{background:#3e3f3d;border-color:#575657}
+.card-main{display:flex;align-items:center;padding:16px 18px}
+.card-avatar{width:68px;height:68px;border-radius:50%;border:1px solid #575657;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;flex-shrink:0}
+.card-info{margin-left:16px;min-width:0}
+.card-name{font-size:26px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-meta{color:#8f8d8b;font-size:16px;margin-top:6px}
+.card-sub{display:none;border-top:1px solid #1c1c1c;padding:10px}
+.card.open .card-sub{display:block}
+.sub-btn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:#3e3f3d;color:#e3e1e1;border:none;padding:12px 15px;margin:5px 0;border-radius:5px;cursor:pointer;font-size:18px}
+.sub-btn:hover{background:#4a4a48;color:#fff}
+.sub-btn .cnt{color:#8f8d8b}
+#chat{position:absolute;left:560px;top:0;right:0;bottom:0;display:flex;flex-direction:column}
+#strip{height:92px;background:#171716;border-bottom:1px solid #2b2a28;display:flex;align-items:center;padding:0 30px}
+#strip .name{font-size:29px;color:#fff;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#frame{flex:1;margin:18px 28px 28px;border:1.5px solid #cac9c9;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.02)}
+#frame-bar{display:flex;height:5px}
+#frame-bar i{flex:1}
+#frame-bar .m{background:#e202e2}
+#frame-bar .y{background:#f3f100}
+#frame-bar .c{background:#01f1f1}
+#msgs{flex:1;overflow-y:auto;padding:24px 30px}
+.msg{display:flex;margin:14px 0;align-items:flex-start}
+.msg.self{flex-direction:row-reverse}
+.avatar{width:54px;height:54px;border-radius:50%;border:1px solid #575657;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:600;flex-shrink:0}
+.msg-body{margin:0 14px;max-width:62%}
+.msg.self .msg-body{text-align:right}
+.msg-name{color:#b8b6b4;font-size:16px;margin-bottom:6px}
+.msg.self .msg-name{text-align:right}
+.bubble{position:relative;display:inline-block;background:#464444;color:#fff;border-radius:15px;padding:12px 18px;font-size:19px;line-height:1.55;white-space:pre-wrap;word-break:break-word;text-align:left}
+.msg.self .bubble{background:#f0eeee;color:#000}
+.bubble::before{content:"";position:absolute;top:14px;width:0;height:0;border:7px solid transparent}
+.msg:not(.self) .bubble::before{left:-12px;border-right-color:#464444}
+.msg.self .bubble::before{right:-12px;border-left-color:#f0eeee}
+.msg-time{color:#6f6d6b;font-size:14px;margin-top:5px}
+.msg.self .msg-time{text-align:right}
+.list{padding:10px}
+.file-item{background:#2b2927;padding:14px 16px;margin-bottom:10px;border-radius:6px;color:#e3e1e1;cursor:pointer;font-size:18px}
+.file-item:hover{background:#3e3f3d}
+.file-img{max-width:300px;max-height:220px;display:block;border-radius:6px;margin-bottom:8px;object-fit:contain}
+.file-name{color:#e3e1e1}
+audio{width:100%;max-width:460px;display:block;margin-bottom:8px}
+#lightbox{position:absolute;left:0;top:0;width:1920px;height:1080px;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;z-index:99;cursor:zoom-out}
+#lightbox.show{display:flex}
+#lightbox img{max-width:90%;max-height:90%;border:1px solid #575657;border-radius:4px}
+.nf-block{background:#2b2927;padding:14px 16px;margin-bottom:14px;border-radius:6px}
+.nf-file{color:#cac9c9;font-size:13px;margin-bottom:8px;border-bottom:1px solid #1c1c1c;padding-bottom:6px}
+.nf-line{color:#e3e1e1;white-space:pre-wrap;line-height:1.7;font-size:16px}
+.empty{color:#6f6d6b;text-align:center;padding:80px 0;font-size:18px}
+#msgs::-webkit-scrollbar,#cards::-webkit-scrollbar{width:8px}
+#msgs::-webkit-scrollbar-thumb,#cards::-webkit-scrollbar-thumb{background:#3e3f3d;border-radius:4px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="tricolor"><i class="m"></i><i class="y"></i><i class="c"></i></div>
+  <div id="header">%%TITLE%%</div>
+  <div id="cards"></div>
+  <div id="chat">
+    <div id="strip"><div class="name" id="roomName">%%SELECT%%</div></div>
+    <div id="frame">
+      <div id="frame-bar"><i class="m"></i><i class="y"></i><i class="c"></i></div>
+      <div id="msgs"><div class="empty">%%SELECT%%</div></div>
+    </div>
+  </div>
+  <div id="lightbox"><img id="lightboxImg" alt=""></div>
+</div>
+<script>
+const L={chat:"%%CHAT%%",attach:"%%ATTACH%%",nf:"%%NF%%",msgs:"%%MSGS%%",last:"%%LAST%%"};
+const PALETTE=["#576b95","#07c160","#e6a23c","#409eff","#f56c6c","#909399","#9b59b6","#1abc9c"];
+function hashStr(s){let h=0;for(const c of s){h=(h*31+c.charCodeAt(0))>>>0}return h}
+function avatarOf(uid){return {c:PALETTE[hashStr(uid)%PALETTE.length],ch:(uid||"?").charAt(0).toUpperCase()}}
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+const lb=document.getElementById("lightbox");const lbImg=document.getElementById("lightboxImg");
+function showImg(u){lbImg.src=u;lb.classList.add("show")}
+lb.addEventListener("click",()=>{lb.classList.remove("show");lbImg.src=""});
+function fit(){
+  const k=Math.min(innerWidth/1920,innerHeight/1080);
+  document.getElementById("stage").style.setProperty("--k",String(k));
+}
+async function init(){
+  fit();addEventListener("resize",fit);
+  const r=await fetch("/data.json");const DATA=await r.json();
+  const cards=document.getElementById("cards");
+  for(const room of DATA.rooms){
+    const selfId=room.msgs.length?room.msgs[0].user:null;
+    const nfCount=room.nonformat.reduce((a,b)=>a+b.lines.length,0);
+    const {c,ch}=avatarOf(room.id);
+    const card=document.createElement("div");card.className="card";
+    card.innerHTML='<div class="card-main">'+
+      '<div class="card-avatar" style="background:'+c+'">'+ch+'</div>'+
+      '<div class="card-info"><div class="card-name">'+esc(room.name)+'</div>'+
+      '<div class="card-meta">'+room.msgs.length+' '+L.msgs+' · '+L.last+esc(room.last_time)+'</div></div></div>'+
+      '<div class="card-sub">'+
+      '<button class="sub-btn" data-a="chat">'+L.chat+'<span class="cnt">'+room.msgs.length+'</span></button>'+
+      '<button class="sub-btn" data-a="att">'+L.attach+'<span class="cnt">'+room.attachments.length+'</span></button>'+
+      '<button class="sub-btn" data-a="nf">'+L.nf+'<span class="cnt">'+nfCount+'</span></button>'+
+      '</div>';
+    card.addEventListener("click",()=>card.classList.toggle("open"));
+    card.querySelectorAll(".sub-btn").forEach(b=>b.addEventListener("click",e=>{
+      e.stopPropagation();showRoom(room,b.dataset.a,selfId);
+    }));
+    cards.appendChild(card);
+  }
+}
+function showRoom(room,action,selfId){
+  document.getElementById("roomName").textContent=room.name;
+  const c=document.getElementById("msgs");c.innerHTML="";
+  if(action==="att"){
+    if(!room.attachments.length){c.innerHTML='<div class="empty">-</div>';return}
+    const list=document.createElement("div");list.className="list";
+    for(const f of room.attachments){
+      const d=document.createElement("div");d.className="file-item";d.textContent=f.name;
+      if(f.kind==="image"){
+        d.innerHTML='<img class="file-img" src="'+f.url+'" alt="">'+
+          '<div class="file-name">'+esc(f.name)+'</div>';
+        d.addEventListener("click",()=>showImg(f.url));
+      } else if(f.kind==="audio"){
+        d.innerHTML='<audio controls preload="none" src="'+f.url+'"></audio>'+
+          '<div class="file-name">'+esc(f.name)+'</div>';
+      } else {
+        d.textContent=f.name;
+        d.addEventListener("click",()=>window.open(f.url,"_blank"));
+      }
+      list.appendChild(d);
+    }
+    c.appendChild(list);return;
+  }
+  if(action==="nf"){
+    if(!room.nonformat.length){c.innerHTML='<div class="empty">-</div>';return}
+    for(const blk of room.nonformat){
+      const d=document.createElement("div");d.className="nf-block";
+      d.innerHTML='<div class="nf-file">'+esc(blk.file)+'</div>'+
+        blk.lines.map(l=>'<div class="nf-line">'+esc(l)+'</div>').join("");
+      c.appendChild(d);
+    }
+    return;
+  }
+  if(!room.msgs.length){c.innerHTML='<div class="empty">-</div>';return}
+  for(const m of room.msgs){
+    const isSelf=m.user===selfId;
+    const {c:ac,ch}=avatarOf(m.user);
+    const row=document.createElement("div");row.className="msg"+(isSelf?" self":"");
+    const av=document.createElement("div");av.className="avatar";av.style.background=ac;av.textContent=ch;
+    const body=document.createElement("div");body.className="msg-body";
+    const nm=document.createElement("div");nm.className="msg-name";nm.textContent=m.name;
+    const bub=document.createElement("div");bub.className="bubble";bub.textContent=m.content;
+    const tm=document.createElement("div");tm.className="msg-time";tm.textContent=m.time;
+    body.append(nm,bub,tm);
+    row.append(av,body);
+    c.appendChild(row);
+  }
+  c.scrollTop=c.scrollHeight;
+}
+init();
+</script>
+</body>
+</html>"""
+
+
+_FILE_TYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".bmp": "image/bmp",
+    ".svg": "image/svg+xml",
+    ".mp3": "audio/mpeg",
+    ".wav": "audio/wav",
+    ".ogg": "audio/ogg",
+    ".m4a": "audio/mp4",
+    ".flac": "audio/flac",
+    ".aac": "audio/aac",
+}
+
+
+class BetterUI:
+    def __init__(self):
+        self.server = None
+        self.thread = None
+        self.port = 0
+
+    def _make_handler(self, chatbox_root):
+        def _serve_file(h, path):
+            try:
+                parts = path.split("/")[2:]
+                if len(parts) != 2:
+                    h.send_error(400)
+                    return
+                room_id = urllib.parse.unquote(parts[0])
+                name = urllib.parse.unquote(parts[1])
+                if "/" in name or "\\" in name or ".." in name:
+                    h.send_error(400)
+                    return
+                base = (Path(chatbox_root) / room_id).resolve()
+                fp = (base / name).resolve()
+                if not str(fp).startswith(str(base)) or not fp.is_file():
+                    h.send_error(404)
+                    return
+                body = fp.read_bytes()
+                ext = fp.suffix.lower()
+                ctype = _FILE_TYPES.get(ext)
+                if ctype is None:
+                    ctype = ("text/plain; charset=utf-8"
+                             if ext in (".txt", ".json", ".log", ".md")
+                             else "application/octet-stream")
+                h.send_response(200)
+                h.send_header("Content-Type", ctype)
+                h.send_header("Content-Length", str(len(body)))
+                h.end_headers()
+                h.wfile.write(body)
+            except Exception:
+                h.send_error(400)
+
+        class _Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                parsed = urllib.parse.urlparse(self.path)
+                if parsed.path in ("/", "/index.html"):
+                    html = (_WEBUI_HTML
+                            .replace("%%CHAT%%", tr("聊天记录"))
+                            .replace("%%ATTACH%%", tr("附件"))
+                            .replace("%%NF%%", tr("非格式文本"))
+                            .replace("%%SELECT%%", tr("选择一个房间"))
+                            .replace("%%TITLE%%", tr("CFMS聊天记录"))
+                            .replace("%%MSGS%%", tr("条消息"))
+                            .replace("%%LAST%%", tr("最后：")))
+                    body = html.encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                elif parsed.path == "/data.json":
+                    body = json.dumps(self.server.data, ensure_ascii=False).encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                elif parsed.path.startswith("/file/"):
+                    _serve_file(self, parsed.path)
+                else:
+                    self.send_error(404)
+
+            def log_message(self, *args):
+                pass
+
+        return _Handler
+
+    def start(self, data: dict, chatbox_root) -> str:
+        self.stop()
+        handler = self._make_handler(chatbox_root)
+        self.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        self.server.data = data
+        self.port = self.server.server_address[1]
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        return f"http://127.0.0.1:{self.port}/"
+
+    def stop(self) -> None:
+        if self.server is not None:
+            try:
+                self.server.shutdown()
+                self.server.server_close()
+            except Exception:
+                pass
+            self.server = None
+            self.thread = None
+
+
 class QuickViewPanel:
     
 
@@ -1460,6 +1816,20 @@ class QuickViewPanel:
             self._save_cfg()
             self._scan()
 
+    def _open_better_ui(self) -> None:
+        if not self.chatbox_path or not os.path.isdir(self.chatbox_path):
+            mb.showinfo(tr("提示"), tr("请选择 chatbox 文件夹"))
+            return
+        try:
+            self._scan()
+            if not getattr(self, "better_ui", None):
+                self.better_ui = BetterUI()
+            data = _build_webui_data(self)
+            url = self.better_ui.start(data, Path(self.chatbox_path))
+            os.startfile(url)
+        except Exception as e:
+            mb.showerror(tr("错误"), tr("打开网页查看失败：{e}").format(e=e))
+
     def _show_help(self) -> None:
         dlg = tk.Toplevel(self.top)
         dlg.title(tr("帮助"))
@@ -1469,7 +1839,7 @@ class QuickViewPanel:
         dlg.grab_set()
         self._center_window(dlg, 420, 300)
 
-        tk.Label(dlg, text=f"{APP_TITLE} - {tr('快速查看')}",
+        tk.Label(dlg, text=f"{APP_TITLE} - {tr('聊天记录')}",
                  font=("Microsoft YaHei", 12, "bold")).pack(pady=(16, 10))
         tk.Label(dlg, text=(
             "读取已下载的 .runtime/chatbox 下的聊天记录，\n"
@@ -1640,6 +2010,7 @@ class QuickViewPanel:
 
         ttk.Button(tbar, text=tr("选择文件夹"), command=self._pick_folder).pack(side="left")
         ttk.Button(tbar, text=tr("刷新"), command=self._scan).pack(side="left", padx=(6, 0))
+        ttk.Button(tbar, text=tr("网页查看"), command=self._open_better_ui).pack(side="left", padx=(6, 0))
         ttk.Button(tbar, text=tr("设置"), command=self._show_settings).pack(side="left", padx=(6, 0))
         ttk.Button(tbar, text=tr("帮助"), command=self._show_help).pack(side="left", padx=(6, 0))
 
@@ -2173,1126 +2544,6 @@ class QuickViewPanel:
         self._render_chat()
 
 
-CHATBOX_DIR = APP_DIR / "downloads" / ".runtime" / "chatbox"
-HTML_TITLE = "对话记录"
-HTML_SUBTITLE = "内部通讯"
-USER_NAME_MAP: dict[str, dict] = {}
-ROOM_NAME_MAP: dict[str, str] = {}
-DATE_GROUP_NAMES: dict[str, str] = {}
-DECODED_IDS: dict[str, str] = {}
-
-def get_user_name(user_id: str) -> str:
-    
-    return USER_NAME_MAP.get(user_id, {}).get("name", user_id[:6])
-
-def get_room_name(room_id: str) -> str:
-    
-    return ROOM_NAME_MAP.get(room_id, room_id[:8] + "...")
-
-def get_date_label(date_str: str) -> str:
-    
-    return DATE_GROUP_NAMES.get(date_str, "")
-
-def get_user_info(file_hash: str) -> dict:
-    
-    if file_hash in USER_NAME_MAP:
-        return USER_NAME_MAP[file_hash]
-    
-    colors = ["#576b95", "#07c160", "#e6a23c", "#409eff", "#f56c6c", "#909399"]
-    avatars = ["👤", "👥", "🗣️", "💭", "📝", "🫥"]
-    idx = hash(file_hash) % len(colors)
-    new_user = {
-        "name": f"用户{file_hash[:6]}",
-        "avatar": avatars[idx],
-        "color": colors[idx],
-    }
-    USER_NAME_MAP[file_hash] = new_user
-    print(f"🆕 新用户已添加: {file_hash} → {new_user['name']}")
-    return new_user
-
-def parse_chat_file(filepath: Path) -> list[dict]:
-    
-    messages = []
-    file_hash = filepath.stem  
-    user_info = get_user_info(file_hash)
-
-    
-    with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-        lines = f.readlines()
-
-    for line in lines:
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        
-        match = re.match(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s*\|\s*(.*)", line)
-        if match:
-            time_str = match.group(1)
-            content = match.group(2)
-
-            
-            comment_match = re.match(r"^(.*?)\s*//\s*(.*)$", content)
-            if comment_match and not content.startswith("http"):
-                content = comment_match.group(1).strip()
-                
-                ref = comment_match.group(2).strip()
-                if ref:
-                    ref_match = re.match(r"^([0-9a-fA-F]+)\s*->\s*(.*)$", ref)
-                    if ref_match:
-                        ref_user_id = ref_match.group(1)
-                        ref_msg = ref_match.group(2)
-                        ref_user_name = get_user_name(ref_user_id)
-                        ref_display = f"{ref_user_name} → {ref_msg}"
-                    else:
-                        ref_display = ref
-                    content += f' <span class="msg-ref">↩ {ref_display}</span>'
-
-            messages.append({
-                "user_id": file_hash,
-                "user_name": user_info["name"],
-                "user_avatar": user_info["avatar"],
-                "user_color": user_info["color"],
-                "time": time_str,
-                "timestamp": datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S"),
-                "content": content,
-            })
-
-    return messages
-
-def load_all_chats() -> dict[str, list[dict]]:
-    
-    rooms = collections.defaultdict(list)
-
-    if not CHATBOX_DIR.exists():
-        print(f"❌ 目录不存在: {CHATBOX_DIR}")
-        return rooms
-
-    for room_dir in sorted(CHATBOX_DIR.iterdir()):
-        if not room_dir.is_dir():
-            continue
-
-        room_id = room_dir.name
-        
-        if room_id.startswith("00000000-0000-0000"):
-            print(f"⏭️ 忽略占位房间: {room_id}")
-            continue
-        for file in sorted(room_dir.glob("*.txt")):
-            messages = parse_chat_file(file)
-            rooms[room_id].extend(messages)
-
-    
-    for room_id in rooms:
-        rooms[room_id].sort(key=lambda m: m["timestamp"])
-
-    return rooms
-
-def generate_html(rooms: dict[str, list[dict]]) -> str:
-    
-    
-    room_list = []
-    for room_id, msgs in rooms.items():
-        if not msgs:
-            continue
-        room_list.append({
-            "id": room_id,
-            "name": get_room_name(room_id),
-            "first_time": msgs[0]["timestamp"],
-            "last_time": msgs[-1]["timestamp"],
-            "message_count": len(msgs),
-            "users": list(set(m["user_name"] for m in msgs)),
-        })
-    room_list.sort(key=lambda r: r["first_time"])
-
-    
-    rooms_json = json.dumps(room_list, ensure_ascii=False, default=str)
-    chats_json_data = {}
-    for room_id, msgs in rooms.items():
-        chats_json_data[room_id] = [
-            {k: str(v) if isinstance(v, datetime) else v for k, v in m.items()}
-            for m in msgs
-        ]
-    chats_json = json.dumps(chats_json_data, ensure_ascii=False)
-
-    html = f'''<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{HTML_TITLE}</title>
-<style>
-* {{ margin: 0; padding: 0; box-sizing: border-box; }}
-body {{
-    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
-    background: #ededed;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-}}
-
-
-.sidebar {{
-    width: 280px;
-    min-width: 280px;
-    background: #e6e6e6;
-    border-right: 1px solid #d9d9d9;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}}
-.sidebar-header {{
-    padding: 20px 16px 12px;
-    background: #e6e6e6;
-    border-bottom: 1px solid #d9d9d9;
-}}
-.sidebar-header h1 {{
-    font-size: 18px;
-    font-weight: 600;
-    color: #191919;
-    margin-bottom: 4px;
-}}
-.sidebar-header .subtitle {{
-    font-size: 12px;
-    color: #888;
-}}
-.room-list {{
-    flex: 1;
-    overflow-y: auto;
-}}
-.room-item {{
-    display: flex;
-    align-items: center;
-    padding: 14px 16px;
-    cursor: pointer;
-    transition: background 0.15s;
-    border-bottom: 1px solid #dfdfdf;
-}}
-.room-item:hover {{ background: #dadada; }}
-.room-item.active {{ background: #c9c9c9; }}
-.room-avatar {{
-    width: 44px;
-    height: 44px;
-    border-radius: 6px;
-    background: #07c160;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    margin-right: 12px;
-    flex-shrink: 0;
-}}
-.room-info {{ flex: 1; min-width: 0; }}
-.room-name {{
-    font-size: 15px;
-    color: #191919;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}}
-.room-meta {{
-    font-size: 12px;
-    color: #999;
-}}
-.room-badge {{
-    font-size: 11px;
-    background: #f3514f;
-    color: #fff;
-    border-radius: 10px;
-    padding: 2px 7px;
-    min-width: 20px;
-    text-align: center;
-}}
-
-
-.chat-area {{
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: #f5f5f5;
-    min-width: 0;
-}}
-.chat-header {{
-    padding: 14px 20px;
-    background: #ededed;
-    border-bottom: 1px solid #d9d9d9;
-    display: flex;
-    align-items: center;
-}}
-.chat-header .title {{
-    font-size: 17px;
-    font-weight: 500;
-    color: #191919;
-}}
-.chat-header .sub-info {{
-    font-size: 12px;
-    color: #999;
-    margin-top: 2px;
-}}
-.chat-messages {{
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 20px;
-}}
-.chat-messages::-webkit-scrollbar {{ width: 6px; }}
-.chat-messages::-webkit-scrollbar-thumb {{ background: #ccc; border-radius: 3px; }}
-
-
-.time-divider {{
-    text-align: center;
-    margin: 16px 0;
-}}
-.time-divider span {{
-    font-size: 12px;
-    color: #b0b0b0;
-    background: #f5f5f5;
-    padding: 4px 12px;
-    border-radius: 2px;
-}}
-.time-divider .date-label {{
-    display: block;
-    font-size: 11px;
-    color: #999;
-    margin-top: 2px;
-}}
-
-
-.msg-row {{
-    display: flex;
-    margin-bottom: 16px;
-    align-items: flex-start;
-}}
-.msg-row.self {{
-    flex-direction: row-reverse;
-}}
-.msg-avatar {{
-    width: 38px;
-    height: 38px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-    background: #e0e0e0;
-}}
-.msg-row.self .msg-avatar {{ margin-left: 10px; }}
-.msg-row:not(.self) .msg-avatar {{ margin-right: 10px; }}
-
-.msg-avatar {{
-    cursor: pointer;
-    transition: transform 0.15s;
-    user-select: none;
-}}
-.msg-avatar:hover {{ transform: scale(1.15); }}
-.msg-avatar.avatar-edited::before {{
-    content: "";
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 8px;
-    height: 8px;
-    background: #07c160;
-    border-radius: 50%;
-    border: 1px solid #fff;
-}}
-.msg-bubble-wrap {{ max-width: 65%; }}
-.msg-sender {{
-    font-size: 12px;
-    color: #999;
-    margin-bottom: 4px;
-    padding: 0 8px;
-}}
-.msg-row.self .msg-sender {{ text-align: right; }}
-.msg-bubble {{
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 15px;
-    line-height: 1.5;
-    word-break: break-word;
-    position: relative;
-    color: #191919;
-}}
-.msg-row:not(.self) .msg-bubble {{
-    background: #fff;
-    border-top-left-radius: 2px;
-}}
-.msg-row.self .msg-bubble {{
-    background: #95ec69;
-    border-top-right-radius: 2px;
-}}
-.msg-time {{
-    font-size: 11px;
-    color: #b0b0b0;
-    margin-top: 4px;
-    padding: 0 8px;
-}}
-.msg-row.self .msg-time {{ text-align: right; }}
-.msg-ref {{
-    display: block;
-    font-size: 11px;
-    color: #888;
-    margin-top: 4px;
-    padding-top: 4px;
-    border-top: 1px solid rgba(0,0,0,0.08);
-    font-style: italic;
-}}
-
-
-.id-tooltip {{
-    position: fixed;
-    z-index: 999;
-    background: rgba(0, 0, 0, 0.82);
-    color: #fff;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-family: Consolas, "Courier New", monospace;
-    white-space: nowrap;
-    pointer-events: none;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-}}
-
-
-.msg-sender {{
-    cursor: pointer;
-    padding: 2px 6px;
-    margin: -2px -6px;
-    border-radius: 4px;
-    transition: background 0.2s;
-    position: relative;
-}}
-.msg-sender:hover {{ background: rgba(0,0,0,0.06); }}
-.msg-sender::after {{
-    content: "✎";
-    font-size: 10px;
-    margin-left: 4px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}}
-.msg-sender:hover::after {{ opacity: 0.4; }}
-.msg-sender.edited {{ border-bottom: 2px dashed #07c160; }}
-.msg-sender.edited::after {{ opacity: 0.7; content: "✓"; }}
-
-.edit-mode .msg-sender {{
-    cursor: text;
-    background: rgba(7,193,96,0.06);
-    border: 1px dashed #ccc;
-    border-radius: 4px;
-    padding: 2px 6px;
-    margin: -2px -6px;
-}}
-.edit-mode .msg-sender:hover {{ background: rgba(7,193,96,0.12); }}
-.edit-mode .msg-sender::after {{ opacity: 0; }}
-.edit-mode .msg-avatar::after {{
-    content: "✎";
-    position: absolute;
-    bottom: -2px;
-    right: -2px;
-    font-size: 10px;
-    background: #07c160;
-    color: #fff;
-    border-radius: 50%;
-    width: 16px;
-    height: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #fff;
-}}
-.msg-sender input {{
-    font-size: inherit;
-    font-family: inherit;
-    color: inherit;
-    border: none;
-    outline: none;
-    background: transparent;
-    width: 100%;
-    padding: 0;
-}}
-
-.empty-state {{
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #ccc;
-}}
-.empty-state .icon {{ font-size: 64px; margin-bottom: 16px; }}
-.empty-state .text {{ font-size: 16px; }}
-
-
-.back-btn {{
-    display: none;
-    width: 32px;
-    height: 32px;
-    margin-right: 10px;
-    font-size: 18px;
-    line-height: 32px;
-    text-align: center;
-    cursor: pointer;
-    color: #576b95;
-    flex-shrink: 0;
-    border-radius: 50%;
-    -webkit-tap-highlight-color: transparent;
-}}
-
-
-@media (max-width: 768px) {{
-    body {{ flex-direction: column; }}
-    .sidebar {{
-        width: 100%;
-        min-width: 0;
-        height: 100vh;
-        height: 100dvh;
-    }}
-    .sidebar.mobile-hidden {{ display: none; }}
-    .sidebar-header {{
-        padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
-    }}
-    .room-item {{
-        padding: 12px 14px;
-        -webkit-tap-highlight-color: transparent;
-    }}
-    .room-avatar {{
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-    }}
-    .room-name {{ font-size: 14px; }}
-    .room-badge {{
-        font-size: 10px;
-        padding: 2px 6px;
-    }}
-
-    .chat-area {{
-        display: none;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        z-index: 10;
-    }}
-    .chat-area.mobile-active {{ display: flex; }}
-
-    .chat-header {{
-        padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
-    }}
-    .chat-header .title {{ font-size: 16px; }}
-    .back-btn {{ display: block; }}
-
-    .chat-messages {{
-        padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
-    }}
-
-    .msg-bubble-wrap {{ max-width: 85%; }}
-    .msg-bubble {{
-        padding: 10px 12px;
-        font-size: 15px;
-    }}
-    .msg-avatar {{
-        width: 34px;
-        height: 34px;
-        font-size: 16px;
-    }}
-    .msg-row.self .msg-avatar {{ margin-left: 8px; }}
-    .msg-row:not(.self) .msg-avatar {{ margin-right: 8px; }}
-
-    .msg-sender {{ font-size: 11px; }}
-    .msg-time {{ font-size: 10px; }}
-    .msg-ref {{ font-size: 10px; }}
-
-    .time-divider span {{
-        font-size: 11px;
-        padding: 3px 10px;
-    }}
-    .time-divider .date-label {{ font-size: 10px; }}
-}}
-</style>
-</head>
-<body>
-
-
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <h1>💬 对话记录</h1>
-        <div class="subtitle">{HTML_SUBTITLE}</div>
-    </div>
-    <div class="room-list" id="roomList"></div>
-</div>
-
-
-<div class="chat-area" id="chatArea">
-    <div class="empty-state" id="emptyState">
-        <div class="icon">💬</div>
-        <div class="text">选择一个会话查看</div>
-    </div>
-    <div class="chat-header" id="chatHeader" style="display:none;">
-        <div class="back-btn" id="backBtn" onclick="goBack()">←</div>
-        <div>
-            <div class="title" id="chatTitle"></div>
-            <div class="sub-info" id="chatSubInfo"></div>
-        </div>
-    </div>
-    <div class="chat-messages" id="chatMessages" style="display:none;"></div>
-</div>
-
-
-<div class="id-tooltip" id="idTooltip" style="display:none;"></div>
-
-<script>
-var ROOMS = {rooms_json};
-var CHATS = {chats_json};
-var DECODED_IDS = {json.dumps(DECODED_IDS, ensure_ascii=False)};
-var USERS = {json.dumps(USER_NAME_MAP, ensure_ascii=False)};
-
-var NAME_EDITS = {{}};
-try {{
-    NAME_EDITS = JSON.parse(localStorage.getItem('chatUserNames') || '{{}}');
-}} catch(e) {{ NAME_EDITS = {{}}; }}
-var AVATAR_EDITS = {{}};
-try {{
-    AVATAR_EDITS = JSON.parse(localStorage.getItem('chatUserAvatars') || '{{}}');
-}} catch(e) {{ AVATAR_EDITS = {{}}; }}
-var editMode = false;
-
-function toggleEditMode() {{
-    editMode = !editMode;
-    var btn = document.getElementById('editModeBtn');
-    var area = document.getElementById('chatArea');
-    if (editMode) {{
-        area.classList.add('edit-mode');
-        btn.classList.add('export');
-        btn.textContent = '✏️ 编辑中...';
-        applyEditModeInputs();
-    }} else {{
-        area.classList.remove('edit-mode');
-        btn.classList.remove('export');
-        btn.textContent = '✏️ 编辑模式';
-        applyNameEdits();
-        applyAvatarEdits();
-    }}
-}}
-
-function applyEditModeInputs() {{
-    var all = document.querySelectorAll('.msg-sender');
-    all.forEach(function(el) {{
-        if (el.querySelector('input')) return;
-        var uid = el.getAttribute('data-user-id');
-        var orig = el.getAttribute('data-orig-name');
-        if (!uid) return;
-        var current = NAME_EDITS[uid] || orig;
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.value = current;
-        function commit() {{
-            var v = input.value.trim();
-            if (v && v !== orig) {{
-                NAME_EDITS[uid] = v;
-            }} else {{
-                delete NAME_EDITS[uid];
-            }}
-            localStorage.setItem('chatUserNames', JSON.stringify(NAME_EDITS));
-        }}
-        input.addEventListener('change', commit);
-        input.addEventListener('blur', commit);
-        input.addEventListener('keydown', function(ev) {{
-            if (ev.key === 'Enter') {{ input.blur(); }}
-            if (ev.key === 'Escape') {{
-                input.value = orig;
-                delete NAME_EDITS[uid];
-                localStorage.setItem('chatUserNames', JSON.stringify(NAME_EDITS));
-                input.blur();
-            }}
-        }});
-        el.innerHTML = '';
-        el.appendChild(input);
-    }});
-}}
-var AVATAR_OPTIONS = ['🧑‍💻','🤔','👀','🔍','💬','🎭','😄','📡','🎧','🧩','📊','🔧','🤷‍♂️','🤫','💭','👤','👥','🗣️','📝','🫥','🤖','👻','💀','🎃','🤡','👺','🐱','🐶','🦊','🐼','⭐','🔥','💎','🎵','🎮','🌈','🍀','⚡','🌙','☀️'];
-
-var currentRoom = null;
-var currentUserId = null;
-var isMobile = window.innerWidth <= 768;
-
-function applyAvatarEdits(container) {{
-    var all = (container || document).querySelectorAll('.msg-avatar');
-    all.forEach(function(av) {{
-        var uid = av.getAttribute('data-user-id');
-        if (!uid) return;
-        if (AVATAR_EDITS[uid]) {{
-            av.textContent = AVATAR_EDITS[uid];
-            av.classList.add('avatar-edited');
-        }} else {{
-            av.classList.remove('avatar-edited');
-        }}
-    }});
-}}
-
-function editAvatar(av, uid) {{
-    var input = document.createElement('input');
-    input.type = 'text';
-    input.value = AVATAR_EDITS[uid] || av.textContent.trim();
-    input.style.cssText = 'width:30px;height:30px;font-size:16px;text-align:center;border:1px solid #07c160;border-radius:4px;outline:none;background:#fff;';
-    av.replaceChildren(input);
-    input.focus();
-    input.select();
-    function commit() {{
-        var v = input.value.trim().slice(0, 4); // 最多4个字符
-        var orig = av.getAttribute('data-orig-avatar') || '';
-        if (v && v !== orig) {{
-            AVATAR_EDITS[uid] = v;
-        }} else {{
-            delete AVATAR_EDITS[uid];
-        }}
-        localStorage.setItem('chatUserAvatars', JSON.stringify(AVATAR_EDITS));
-        input.remove();
-        applyAvatarEdits();
-    }}
-    input.addEventListener('blur', commit);
-    input.addEventListener('keydown', function(ev) {{
-        if (ev.key === 'Enter') {{ input.blur(); }}
-        if (ev.key === 'Escape') {{
-            delete AVATAR_EDITS[uid];
-            localStorage.setItem('chatUserAvatars', JSON.stringify(AVATAR_EDITS));
-            input.blur();
-        }}
-    }});
-}}
-
-function applyNameEdits(container) {{
-    var all = (container || document).querySelectorAll('.msg-sender');
-    all.forEach(function(el) {{
-        var uid = el.getAttribute('data-user-id');
-        var orig = el.getAttribute('data-orig-name');
-        if (!uid) return;
-        var decoded = DECODED_IDS[uid] || '';
-        if (NAME_EDITS[uid]) {{
-            el.innerHTML = NAME_EDITS[uid];
-            el.classList.add('edited');
-        }} else {{
-            el.innerHTML = orig;
-            el.classList.remove('edited');
-        }}
-    }});
-}}
-
-function setupNameEdit(el) {{
-    el.addEventListener('dblclick', function(e) {{
-        e.stopPropagation();
-        var uid = el.getAttribute('data-user-id');
-        var orig = el.getAttribute('data-orig-name');
-        if (!uid) return;
-        var currentName = NAME_EDITS[uid] || orig;
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.value = currentName;
-        el.innerHTML = '';
-        el.appendChild(input);
-        input.focus();
-        input.select();
-        function commit() {{
-            var v = input.value.trim();
-            if (v && v !== orig) {{
-                NAME_EDITS[uid] = v;
-            }} else {{
-                delete NAME_EDITS[uid];
-            }}
-            localStorage.setItem('chatUserNames', JSON.stringify(NAME_EDITS));
-            applyNameEdits();
-        }}
-        input.addEventListener('blur', commit);
-        input.addEventListener('keydown', function(ev) {{
-            if (ev.key === 'Enter') {{ input.blur(); }}
-            if (ev.key === 'Escape') {{
-                input.value = orig;
-                delete NAME_EDITS[uid];
-                localStorage.setItem('chatUserNames', JSON.stringify(NAME_EDITS));
-                input.blur();
-            }}
-        }});
-    }});
-}}
-
-var TOOLTIP_DELAY = 800; // 悬停时长（毫秒），达到后显示原始 ID
-var tooltipTimer = null;
-
-function scheduleTooltip(e, id) {{
-    clearTimeout(tooltipTimer);
-    var x = e.clientX;
-    var y = e.clientY;
-    tooltipTimer = setTimeout(function() {{
-        showIdTooltip(x, y, id);
-    }}, TOOLTIP_DELAY);
-}}
-
-function showIdTooltip(x, y, userId) {{
-    var tooltip = document.getElementById('idTooltip');
-    var decoded = DECODED_IDS[userId] || '';
-    if (decoded) {{
-        tooltip.innerHTML = '<span style="color:#95ec69;">' + decoded + '</span> <span style="opacity:0.6;">' + userId + '</span>';
-    }} else {{
-        tooltip.textContent = userId;
-    }}
-    tooltip.style.display = 'block';
-    var w = tooltip.offsetWidth;
-    var h = tooltip.offsetHeight;
-    var px = x + 14;
-    var py = y + 14;
-    if (px + w > window.innerWidth) px = x - w - 10;
-    if (py + h > window.innerHeight) py = y - h - 10;
-    tooltip.style.left = px + 'px';
-    tooltip.style.top = py + 'px';
-}}
-
-function hideIdTooltip() {{
-    clearTimeout(tooltipTimer);
-    document.getElementById('idTooltip').style.display = 'none';
-}}
-
-window.addEventListener('resize', function() {{
-    isMobile = window.innerWidth <= 768;
-}});
-
-function goBack() {{
-    document.getElementById('chatArea').classList.remove('mobile-active');
-    document.getElementById('sidebar').classList.remove('mobile-hidden');
-    currentRoom = null;
-    renderSidebar();
-}}
-
-function renderSidebar() {{
-    var list = document.getElementById('roomList');
-    list.innerHTML = '';
-    ROOMS.forEach(function(room, index) {{
-        var div = document.createElement('div');
-        div.className = 'room-item' + (currentRoom === room.id ? ' active' : '');
-        div.onclick = function() {{ selectRoom(room.id); }};
-
-        var firstMsg = CHATS[room.id] && CHATS[room.id][0];
-        var firstUser = firstMsg ? firstMsg.user_name : '未知';
-
-        div.innerHTML =
-            '<div class="room-avatar" data-room-id="' + room.id + '">' + (room.users[0] || '💬')[0] + '</div>' +
-            '<div class="room-info">' +
-                '<div class="room-name">' + room.name + '</div>' +
-                '<div class="room-meta">' + room.users.slice(0, 3).join('、') +
-                (room.users.length > 3 ? ' 等' + room.users.length + '人' : '') + '</div>' +
-            '</div>' +
-            '<div class="room-badge">' + room.message_count + '</div>';
-        list.appendChild(div);
-
-        var roomAvatar = div.querySelector('.room-avatar');
-        roomAvatar.addEventListener('mouseenter', function(e) {{
-            scheduleTooltip(e, room.id);
-        }});
-        roomAvatar.addEventListener('mouseleave', hideIdTooltip);
-    }});
-}}
-
-function formatTime(ts) {{
-    var d = new Date(ts);
-    var h = d.getHours().toString().padStart(2, '0');
-    var m = d.getMinutes().toString().padStart(2, '0');
-    return h + ':' + m;
-}}
-function formatDate(ts) {{
-    var d = new Date(ts);
-    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
-}}
-
-function selectRoom(roomId) {{
-    currentRoom = roomId;
-    var room = ROOMS.find(function(r) {{ return r.id === roomId; }});
-    var msgs = CHATS[roomId] || [];
-
-    if (isMobile) {{
-        document.getElementById('sidebar').classList.add('mobile-hidden');
-        document.getElementById('chatArea').classList.add('mobile-active');
-    }}
-
-    document.getElementById('emptyState').style.display = 'none';
-    document.getElementById('chatHeader').style.display = 'flex';
-    document.getElementById('chatMessages').style.display = 'block';
-    document.getElementById('chatTitle').textContent = room.name;
-    document.getElementById('chatSubInfo').textContent =
-        room.users.join('、') + ' · ' + room.message_count + ' 条消息';
-
-    var container = document.getElementById('chatMessages');
-    container.innerHTML = '';
-
-    var lastDate = '';
-    var userIds = [];
-    msgs.forEach(function(m) {{
-        if (userIds.indexOf(m.user_id) === -1) userIds.push(m.user_id);
-    }});
-    currentUserId = userIds[0];
-
-    msgs.forEach(function(msg, i) {{
-        var msgDate = msg.timestamp.split(' ')[0];
-        if (msgDate !== lastDate) {{
-            lastDate = msgDate;
-            var dateLabel = DATE_GROUPS[msgDate] || '';
-            container.innerHTML +=
-                '<div class="time-divider">' +
-                    '<span>' + formatDate(msg.timestamp) + '</span>' +
-                    (dateLabel ? '<span class="date-label">' + dateLabel + '</span>' : '') +
-                '</div>';
-        }}
-
-        var isSelf = msg.user_id === currentUserId;
-        container.innerHTML +=
-            '<div class="msg-row' + (isSelf ? ' self' : '') + '">' +
-                '<div class="msg-avatar" data-user-id="' + msg.user_id + '" data-orig-avatar="' + msg.user_avatar + '" style="background:' + msg.user_color + '20;color:' + msg.user_color + '">' +
-                    msg.user_avatar +
-                '</div>' +
-                '<div class="msg-bubble-wrap">' +
-                    '<div class="msg-sender" data-user-id="' + msg.user_id + '" data-orig-name="' + msg.user_name.replace(/"/g, '&quot;') + '" style="color:' + msg.user_color + '">' +
-                        msg.user_name +
-                    '</div>' +
-                    '<div class="msg-bubble">' +
-                        msg.content +
-                    '</div>' +
-                    '<div class="msg-time">' + formatTime(msg.timestamp) + '</div>' +
-                '</div>' +
-            '</div>';
-    }});
-
-    var avatarEls = container.querySelectorAll('.msg-avatar');
-    avatarEls.forEach(function(av) {{
-        var uid = av.getAttribute('data-user-id');
-        if (!uid) return;
-        av.addEventListener('mouseenter', function(e) {{
-            if (editMode) return;
-            scheduleTooltip(e, uid);
-        }});
-        av.addEventListener('mouseleave', hideIdTooltip);
-        av.addEventListener('click', function(e) {{
-            e.stopPropagation();
-            editAvatar(av, uid);
-        }});
-        av.title = '';
-    }});
-
-    if (editMode) {{
-        applyEditModeInputs();
-    }} else {{
-        applyNameEdits(container);
-        applyAvatarEdits(container);
-        var senderEls = container.querySelectorAll('.msg-sender');
-        senderEls.forEach(setupNameEdit);
-    }}
-
-    container.scrollTop = container.scrollHeight;
-
-    renderSidebar();
-}}
-
-var DATE_GROUPS = {json.dumps(DATE_GROUP_NAMES, ensure_ascii=False)};
-
-renderSidebar();
-if (ROOMS.length > 0) {{
-    selectRoom(ROOMS[0].id);
-}}
-</script>
-</body>
-</html>'''
-    return html
-
-def _default_avatar_color(user_id: str) -> tuple[str, str]:
-    
-    colors = ["#576b95", "#07c160", "#e6a23c", "#409eff", "#f56c6c", "#909399"]
-    avatars = ["👤", "👥", "🗣️", "💭", "📝", "🫥"]
-    idx = hash(user_id) % len(colors)
-    return avatars[idx], colors[idx]
-
-
-class HtmlGenPanel:
-    
-
-    def __init__(self, parent, toolbox):
-        self.toolbox = toolbox
-        self.cfg = toolbox.cfg
-        self.frame = ttk.Frame(parent)
-        self.top = self.frame.winfo_toplevel()
-        self._build_ui()
-        self._refresh_path_label()
-
-    def _chatbox_path(self) -> str:
-        p = str(self.cfg.get("chatbox_path") or "").strip()
-        if not p:
-            p = str(Path(str(self.cfg.get("output") or APP_DIR)) / ".runtime" / "chatbox")
-        return p
-
-    def _build_ui(self) -> None:
-        pad = ttk.Frame(self.frame, padding=16)
-        pad.pack(fill="both", expand=True)
-
-        ttk.Label(pad, text=tr("生成微信风格聊天记录网页"),
-                  font=("Microsoft YaHei", 14, "bold")).pack(anchor="w")
-        ttk.Label(pad, text=tr("数据源为下载后的 .runtime/chatbox 文件夹，"
-                               "HTML 将保存到本程序所在目录并自动用浏览器打开。"),
-                  foreground="#666").pack(anchor="w", pady=(4, 10))
-
-        path_row = ttk.Frame(pad)
-        path_row.pack(fill="x", pady=6)
-        ttk.Label(path_row, text=tr("聊天数据：")).pack(side="left")
-        self.path_lbl = ttk.Label(path_row, text="", foreground="#1a6fb5")
-        self.path_lbl.pack(side="left", padx=4)
-        ttk.Button(path_row, text=tr("选择文件夹"), command=self._pick_folder).pack(side="left", padx=4)
-
-        self.gen_btn = ttk.Button(
-            pad, text=tr("⚙  生成 HTML 并自动打开"), command=self._generate, width=28)
-        self.gen_btn.pack(anchor="w", pady=12)
-
-        ttk.Label(pad, text=tr("输出文件："), foreground="#888").pack(anchor="w")
-        self.out_lbl = ttk.Label(pad, text="", foreground="#666")
-        self.out_lbl.pack(anchor="w", pady=(0, 8))
-
-        log_frame = ttk.Frame(pad)
-        log_frame.pack(fill="both", expand=True)
-        self.log = tk.Text(log_frame, height=10, state="disabled", wrap="word",
-                           font=("Consolas", 10))
-        sb = ttk.Scrollbar(log_frame, orient="vertical", command=self.log.yview)
-        self.log.configure(yscrollcommand=sb.set)
-        self.log.pack(side="left", fill="both", expand=True)
-        sb.pack(side="right", fill="y")
-
-    def _pick_folder(self) -> None:
-        d = filedialog.askdirectory(initialdir=self._chatbox_path(),
-                                    title=tr("请选择 chatbox 文件夹（含各聊天室子文件夹）"))
-        if d:
-            self.cfg["chatbox_path"] = d
-            self.toolbox.save_config()
-            self._refresh_path_label()
-
-    def _refresh_path_label(self) -> None:
-        self.path_lbl.config(text=self._chatbox_path())
-        out = APP_DIR / f"chat_output_{datetime.now():%Y-%m-%d}.html"
-        self.out_lbl.config(text=str(out))
-
-    def _log(self, text: str) -> None:
-        self.log.config(state="normal")
-        self.log.insert("end", text.rstrip() + "\n")
-        self.log.see("end")
-        self.log.config(state="disabled")
-
-    def _generate(self) -> None:
-        chatbox = self._chatbox_path()
-        if not Path(chatbox).is_dir():
-            mb.showerror(
-                tr("错误"),
-                tr("聊天数据文件夹不存在：\n{path}\n\n").format(path=chatbox)
-                + tr("请先在「下载」页下载数据，或点击「选择文件夹」手动指定。"))
-            return
-        self.gen_btn.config(state="disabled")
-        self._log(tr("开始生成……"))
-
-        def task():
-            global CHATBOX_DIR, USER_NAME_MAP, ROOM_NAME_MAP, DATE_GROUP_NAMES
-            global DECODED_IDS, HTML_TITLE, HTML_SUBTITLE, get_user_info
-            try:
-                
-                
-                buf = io.StringIO()
-                old_out = sys.stdout
-                try:
-                    sys.stdout = buf
-                    
-                    
-                    user_names = self.cfg.get("user_names") or {}
-                    room_names = self.cfg.get("room_names") or {}
-                    date_labels = self.cfg.get("date_labels") or {}
-                    decoded_ids = self.cfg.get("decoded_ids") or {}
-
-                    
-                    HTML_TITLE = (self.cfg.get("html_title") or "").strip() or "对话记录"
-                    HTML_SUBTITLE = (self.cfg.get("html_subtitle") or "").strip() or "内部通讯"
-
-                    chatbox_dir = Path(chatbox)
-
-                    
-                    all_user_ids: set[str] = set()
-                    if chatbox_dir.is_dir():
-                        for room_dir in chatbox_dir.iterdir():
-                            if not room_dir.is_dir():
-                                continue
-                            if room_dir.name.startswith("00000000-0000-0000"):
-                                continue
-                            for f in room_dir.glob("*.txt"):
-                                all_user_ids.add(f.stem)
-
-                    
-                    USER_NAME_MAP = {}
-                    for uid in sorted(all_user_ids):
-                        name = user_names.get(uid, "")
-                        if not name:
-                            name = f"用户{uid[:6]}"
-                        avatar, color = _default_avatar_color(uid)
-                        USER_NAME_MAP[uid] = {
-                            "name": name, "avatar": avatar, "color": color,
-                        }
-                    for uid, name in user_names.items():
-                        if not name:
-                            continue
-                        if uid in USER_NAME_MAP:
-                            USER_NAME_MAP[uid]["name"] = name
-                        else:
-                            avatar, color = _default_avatar_color(uid)
-                            USER_NAME_MAP[uid] = {
-                                "name": name, "avatar": avatar, "color": color,
-                            }
-
-                    ROOM_NAME_MAP = dict(room_names)
-                    DATE_GROUP_NAMES = dict(date_labels)
-                    DECODED_IDS = dict(decoded_ids)
-
-                    
-                    def _get_user_info(file_hash):
-                        if file_hash in USER_NAME_MAP:
-                            return USER_NAME_MAP[file_hash]
-                        name = user_names.get(file_hash, f"用户{file_hash[:6]}")
-                        avatar, color = _default_avatar_color(file_hash)
-                        entry = {"name": name, "avatar": avatar, "color": color}
-                        USER_NAME_MAP[file_hash] = entry
-                        return entry
-                    get_user_info = _get_user_info
-
-                    CHATBOX_DIR = chatbox_dir
-                    rooms = load_all_chats()
-                    if not rooms:
-                        raise RuntimeError(tr("未找到任何聊天数据（chatbox 目录为空或无消息）"))
-                    total = sum(len(msgs) for msgs in rooms.values())
-                    html = generate_html(rooms)
-                    out = APP_DIR / f"chat_output_{datetime.now():%Y-%m-%d}.html"
-                    out.write_text(html, encoding="utf-8")
-                finally:
-                    sys.stdout = old_out
-                    gc_out = buf.getvalue().strip()
-
-                self.top.after(0, lambda: self._log(gc_out) if gc_out else None)
-                self.top.after(0, lambda: self._done(out, len(rooms), total))
-            except Exception as exc:
-                self.top.after(0, lambda: self._fail(str(exc)))
-
-        threading.Thread(target=task, daemon=True).start()
-
-    def _done(self, out: Path, rooms: int, total: int) -> None:
-        self.gen_btn.config(state="normal")
-        self._log(tr("✅ 已生成：") + str(out))
-        self._log("   " + tr("共 {n} 个会话房间，{m} 条消息").format(n=rooms, m=total))
-        try:
-            os.startfile(str(out))
-            self._log(tr("已用默认浏览器打开。"))
-        except Exception as e:
-            self._log(tr("自动打开失败（可手动打开）：") + str(e))
-
-    def _fail(self, err: str) -> None:
-        self.gen_btn.config(state="normal")
-        self._log("❌ " + tr("生成失败") + f"：{err}")
-        mb.showerror(tr("生成失败"), err)
-
-
 MORSE_MAP = {
     "A": ".-", "B": "-...", "C": "-.-.", "D": "-..", "E": ".",
     "F": "..-.", "G": "--.", "H": "....", "I": "..", "J": ".---",
@@ -3526,16 +2777,166 @@ def _baconian_dec(text: str, keys: list[str]) -> str:
     return "".join(out)
 
 
-def _b64_enc(text: str, keys: list[str]) -> str:
-    return base64.b64encode(text.encode("utf-8")).decode("ascii")
+_BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+_BASE62_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+_BASE91_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\""
 
 
-def _b64_dec(text: str, keys: list[str]) -> str:
+def _base58_encode(data: bytes) -> str:
+    n = int.from_bytes(data, "big")
+    out = []
+    while n:
+        n, r = divmod(n, 58)
+        out.append(_BASE58_ALPHABET[r])
+    pad = 0
+    for b in data:
+        if b == 0:
+            pad += 1
+        else:
+            break
+    return "1" * pad + "".join(reversed(out))
+
+
+def _base58_decode(text: str) -> bytes:
+    n = 0
+    for ch in text:
+        idx = _BASE58_ALPHABET.find(ch)
+        if idx < 0:
+            raise ValueError(tr("无效的 Base58 字符：{c}").format(c=ch))
+        n = n * 58 + idx
+    pad = 0
+    for ch in text:
+        if ch == "1":
+            pad += 1
+        else:
+            break
+    body = n.to_bytes((n.bit_length() + 7) // 8, "big") if n else b""
+    return b"\x00" * pad + body
+
+
+def _base62_encode(data: bytes) -> str:
+    n = int.from_bytes(data, "big")
+    if n == 0:
+        return "0" * len(data)
+    out = []
+    while n:
+        n, r = divmod(n, 62)
+        out.append(_BASE62_ALPHABET[r])
+    pad = 0
+    for b in data:
+        if b == 0:
+            pad += 1
+        else:
+            break
+    return "0" * pad + "".join(reversed(out))
+
+
+def _base62_decode(text: str) -> bytes:
+    n = 0
+    for ch in text:
+        idx = _BASE62_ALPHABET.find(ch)
+        if idx < 0:
+            raise ValueError(tr("无效的 Base62 字符：{c}").format(c=ch))
+        n = n * 62 + idx
+    pad = 0
+    for ch in text:
+        if ch == "0":
+            pad += 1
+        else:
+            break
+    body = n.to_bytes((n.bit_length() + 7) // 8, "big") if n else b""
+    return b"\x00" * pad + body
+
+
+def _base91_encode(data: bytes) -> str:
+    b = 0
+    n = 0
+    out = []
+    for byte in data:
+        b |= byte << n
+        n += 8
+        if n > 13:
+            v = b & 8191
+            if v > 88:
+                b >>= 13
+                n -= 13
+            else:
+                v = b & 16383
+                b >>= 14
+                n -= 14
+            out.append(_BASE91_ALPHABET[v % 91])
+            out.append(_BASE91_ALPHABET[v // 91])
+    if n:
+        out.append(_BASE91_ALPHABET[b % 91])
+        if n > 7 or b > 90:
+            out.append(_BASE91_ALPHABET[b // 91])
+    return "".join(out)
+
+
+def _base91_decode(text: str) -> bytes:
+    v = -1
+    b = 0
+    n = 0
+    out = bytearray()
+    for ch in text:
+        c = _BASE91_ALPHABET.find(ch)
+        if c < 0:
+            raise ValueError(tr("无效的 Base91 字符：{c}").format(c=ch))
+        if v < 0:
+            v = c
+        else:
+            v += c * 91
+            b |= v << n
+            n += 13 if (v & 8191) > 88 else 14
+            while n > 7:
+                out.append(b & 255)
+                b >>= 8
+                n -= 8
+            v = -1
+    if v != -1:
+        out.append((b | v << n) & 255)
+    return bytes(out)
+
+
+def _base_encode(text: str, keys: list[str]) -> str:
+    name = keys[0].upper()
+    data = text.encode("utf-8")
+    if name == "BASE64":
+        return base64.b64encode(data).decode("ascii")
+    if name == "BASE58":
+        return _base58_encode(data)
+    if name == "BASE62":
+        return _base62_encode(data)
+    if name == "BASE85":
+        return base64.a85encode(data, adobe=False).decode("ascii")
+    if name == "BASE91":
+        return _base91_encode(data)
+    raise ValueError(tr("不支持的编码：{e}").format(e=name))
+
+
+def _base_decode(text: str, keys: list[str]) -> str:
+    name = keys[0].upper()
     try:
-        raw = base64.b64decode(text.encode("utf-8"), validate=False)
+        if name == "BASE64":
+            raw = base64.b64decode(text.encode("ascii"), validate=False)
+        elif name == "BASE58":
+            raw = _base58_decode(text.strip())
+        elif name == "BASE62":
+            raw = _base62_decode(text.strip())
+        elif name == "BASE85":
+            t = text.strip()
+            if t.startswith("<~") and t.endswith("~>"):
+                t = t[2:-2]
+            raw = base64.a85decode(t.encode("ascii"), adobe=False)
+        elif name == "BASE91":
+            raw = _base91_decode(text.strip())
+        else:
+            raise ValueError(tr("不支持的编码：{e}").format(e=name))
         return raw.decode("utf-8")
+    except ValueError:
+        raise
     except Exception:
-        raise ValueError(tr("BASE64 解码失败，请检查输入内容"))
+        raise ValueError(tr("解码失败，请检查输入内容和编码类型"))
 
 
 def _morse_enc(text: str, keys: list[str]) -> str:
@@ -3723,8 +3124,9 @@ class CryptoPanel:
                       None, _a1z26_enc, _a1z26_dec)
         self._add_tab(nb, tr("进制转换"), tr("进制转换：2-36 进制互转（加密=源进制→目标进制，解密=反向）。"),
                       [(tr("源进制："), "10"), (tr("目标进制："), "16")], _radix_enc, _radix_dec)
-        self._add_tab(nb, tr("BASE64"), tr("BASE64：文本与 BASE64 编码互相转换。"),
-                      None, _b64_enc, _b64_dec)
+        self._add_tab(nb, tr("BASE"), tr("BASE：支持 BASE64 / BASE58 / BASE62 / BASE85 / BASE91 互转。"),
+                      [(tr("编码："), "BASE64", ["BASE64", "BASE58", "BASE62", "BASE85", "BASE91"])],
+                      _base_encode, _base_decode)
         self._add_tab(nb, tr("摩斯电码"), tr("摩斯电码：字母/数字/常用符号与摩斯码互相转换，单词间用 / 分隔。"),
                       None, _morse_enc, _morse_dec)
         self._add_tab(nb, tr("培根密码"), tr("培根密码：字母转 5 位 A/B 编码（也接受 0/1）。"),
@@ -4124,7 +3526,6 @@ class ToolboxApp:
 
         self.download_panel = DownloadPanel(nb, self)
         self.view_panel = QuickViewPanel(nb, self)
-        self.html_panel = HtmlGenPanel(nb, self)
         self.matrix_panel = MatrixPanel(nb, self)
         self.crypto_panel = CryptoPanel(nb, self)
         self.settings_panel = SettingsPanel(nb, self)
@@ -4135,11 +3536,9 @@ class ToolboxApp:
                 self.cfg["chatbox_path"] = str(cand)
                 self.view_panel._load_cfg()
                 self.view_panel._scan()
-                self.html_panel._refresh_path_label()
 
         nb.add(self.download_panel.frame, text=tr("下载"))
-        nb.add(self.view_panel.frame, text=tr("快速查看"))
-        nb.add(self.html_panel.frame, text=tr("生成网页"))
+        nb.add(self.view_panel.frame, text=tr("聊天记录"))
         nb.add(self.matrix_panel.frame, text=tr("矩阵生成"))
         nb.add(self.crypto_panel.frame, text=tr("加解密"))
         nb.add(self.settings_panel.frame, text="⚙")
@@ -4325,10 +3724,6 @@ class ToolboxApp:
             pass
         try:
             self.view_panel._save_cfg()
-        except Exception:
-            pass
-        try:
-            self.html_panel._refresh_path_label()
         except Exception:
             pass
         save_config(self.cfg)

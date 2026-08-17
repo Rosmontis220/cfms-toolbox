@@ -4,15 +4,15 @@
 [![Python](https://img.shields.io/badge/Python-3.14+-blue.svg)](https://github.com/Rosmontis220/cfms-toolbox)
 [![GitHub Tag](https://img.shields.io/github/v/tag/Rosmontis220/cfms-toolbox)](https://github.com/Rosmontis220/cfms-toolbox/releases)
 
-通用版聊天数据工具箱：适配任意同类 CFMS 服务器，集下载、快速查看、生成网页于一体。
+通用版聊天数据工具箱：适配任意同类 CFMS 服务器，集下载、聊天记录、网页查看于一体。
 
 ## 功能
 
 - **下载**：连接 CFMS 服务器（WebSocket + AES-GCM 加密传输），扫描并增量下载文件；支持自动刷新、任务栏托盘通知；下载后区分本次下载的文件是新文件还是已修改文件
-- **快速查看**：本地聊天记录气泡浏览，支持房间/用户重命名、可点击链接、附件打开；自动检测聊天记录中混入的非格式文本，可在附件栏一键查看
-- **生成网页**：把下载的 `.runtime/chatbox` 数据生成微信风格 HTML 页面（生成模块已内置，无需外部文件），保存到程序目录并自动打开
+- **聊天记录**：本地聊天气泡浏览，支持房间/用户重命名、可点击链接、附件打开；自动检测聊天记录中混入的非格式文本，可在附件栏一键查看
+- **网页查看**：点击「网页查看」直接在浏览器中打开聊天记录 WebUI，支持附件图片/音频预览、房间倒序展示；无需生成 HTML 文件
 - **矩阵生成**：把 IP 与端口编码为 7×7 谜题矩阵（含干扰数据、校验和与汉明码纠错行），支持解码还原与转置
-- **加解密**：集成 ASCII、A1Z26、进制转换、BASE64、摩斯电码、培根密码、凯撒密码、埃特巴什码、维吉尼亚密码（支持 Gronsfeld 数字密钥）、关键字密码、简单换位、ADFGVX 密码、编码转换、SHA-256 等常用加解密/编码工具；界面支持中文 / English / 日本語 切换
+- **加解密**：集成 ASCII、A1Z26、进制转换、BASE 系列（BASE64/BASE58/BASE62/BASE85/BASE91）、摩斯电码、培根密码、凯撒密码、埃特巴什码、维吉尼亚密码（支持 Gronsfeld 数字密钥）、关键字密码、简单换位、ADFGVX 密码、编码转换、SHA-256 等常用加解密/编码工具；界面支持中文 / English / 日本語 切换
 
 ## 运行要求
 
@@ -24,7 +24,7 @@
 1. 运行：双击程序
 2. 在「下载」页填写服务器地址、端口、用户名、密码，点击「连接并扫描」
 3. 勾选需要的文件，点击「下载所选文件」
-4. 下载完成后，「快速查看」页可直接浏览聊天室；「生成网页」页一键生成 HTML 并自动用浏览器打开
+4. 下载完成后，「聊天记录」页可直接浏览聊天室；点击「网页查看」用浏览器打开 WebUI
 
 ## 配置
 
@@ -35,7 +35,7 @@
 
 ```bash
 pip install pyinstaller
-pyinstaller --noconfirm --onefile --windowed --name "CFMS_Toolbox_v1.8.0" CFMS_Toolbox.pyw
+pyinstaller --noconfirm --onefile --windowed --name "CFMS_Toolbox_v1.9.0" CFMS_Toolbox.pyw
 ```
 
 ## 隐私说明
