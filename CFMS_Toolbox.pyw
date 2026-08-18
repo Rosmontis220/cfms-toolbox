@@ -50,7 +50,7 @@ def _app_dir() -> Path:
 APP_DIR = _app_dir()
 
 
-APP_VERSION = "1.9.0"
+APP_VERSION = "1.10.0"
 VARIANT_NAME = ""            
 
 SPECIAL = VARIANT_NAME == "遗闻特供版"
@@ -68,6 +68,12 @@ TRANSLATIONS = {
     "en": {
         "CFMS工具箱": "CFMS Toolbox",
         "下载": "Download",
+        "下载文件": "Download Files",
+        "小工具": "Tools",
+        "参考仓库：": "Reference Repos: ",
+        "服务端：": "Server: ",
+        "客户端：": "Client: ",
+        "QQ群：": "QQ Group: ",
         "生成网页": "Generate HTML",
         "加解密": "Encrypt/Decrypt",
         "显示窗口": "Show Window",
@@ -269,6 +275,12 @@ TRANSLATIONS = {
     "ja": {
         "CFMS工具箱": "CFMSツールボックス",
         "下载": "ダウンロード",
+        "下载文件": "ファイルダウンロード",
+        "小工具": "ツール",
+        "参考仓库：": "参考リポジトリ：",
+        "服务端：": "サーバー：",
+        "客户端：": "クライアント：",
+        "QQ群：": "QQグループ：",
         "生成网页": "HTML生成",
         "加解密": "暗号化・復号",
         "显示窗口": "ウィンドウ表示",
@@ -1568,7 +1580,7 @@ audio{width:100%;max-width:460px;display:block;margin-bottom:8px}
 const L={chat:"%%CHAT%%",attach:"%%ATTACH%%",nf:"%%NF%%",msgs:"%%MSGS%%",last:"%%LAST%%"};
 const PALETTE=["#576b95","#07c160","#e6a23c","#409eff","#f56c6c","#909399","#9b59b6","#1abc9c"];
 function hashStr(s){let h=0;for(const c of s){h=(h*31+c.charCodeAt(0))>>>0}return h}
-function avatarOf(uid){return {c:PALETTE[hashStr(uid)%PALETTE.length],ch:(uid||"?").charAt(0).toUpperCase()}}
+function avatarOf(uid,label){return {c:PALETTE[hashStr(uid)%PALETTE.length],ch:(label||uid||"?").charAt(0).toUpperCase()}}
 function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
 const lb=document.getElementById("lightbox");const lbImg=document.getElementById("lightboxImg");
 function showImg(u){lbImg.src=u;lb.classList.add("show")}
@@ -1584,7 +1596,7 @@ async function init(){
   for(const room of DATA.rooms){
     const selfId=room.msgs.length?room.msgs[0].user:null;
     const nfCount=room.nonformat.reduce((a,b)=>a+b.lines.length,0);
-    const {c,ch}=avatarOf(room.id);
+    const {c,ch}=avatarOf(room.id,room.name);
     const card=document.createElement("div");card.className="card";
     card.innerHTML='<div class="card-main">'+
       '<div class="card-avatar" style="background:'+c+'">'+ch+'</div>'+
@@ -1638,7 +1650,7 @@ function showRoom(room,action,selfId){
   if(!room.msgs.length){c.innerHTML='<div class="empty">-</div>';return}
   for(const m of room.msgs){
     const isSelf=m.user===selfId;
-    const {c:ac,ch}=avatarOf(m.user);
+    const {c:ac,ch}=avatarOf(m.user,m.name);
     const row=document.createElement("div");row.className="msg"+(isSelf?" self":"");
     const av=document.createElement("div");av.className="avatar";av.style.background=ac;av.textContent=ch;
     const body=document.createElement("div");body.className="msg-body";
@@ -1853,10 +1865,6 @@ class QuickViewPanel:
             "网址链接：点击气泡内链接可在弹窗中选择打开或复制"),
                  font=("Microsoft YaHei", 9), justify="left",
                  wraplength=370).pack(pady=(12, 0))
-
-        tk.Label(dlg, text="QQ群号：668410643",
-                 font=("Microsoft YaHei", 10, "bold"),
-                 fg="#2980b9").pack(pady=(12, 6))
 
         tk.Button(dlg, text=tr("确定"), command=dlg.destroy,
                   font=("Microsoft YaHei", 10), padx=20).pack(pady=(4, 12))
@@ -3118,6 +3126,9 @@ class CryptoPanel:
     def _build_ui(self) -> None:
         nb = ttk.Notebook(self.frame)
         nb.pack(fill="both", expand=True, padx=6, pady=6)
+        self.nb = nb
+        self.matrix_panel = MatrixPanel(nb, self.toolbox)
+        nb.add(self.matrix_panel.frame, text=tr("矩阵生成"))
         self._add_tab(nb, tr("ASCII"), tr("ASCII：字符与数字编码互相转换（支持 Unicode）。"),
                       None, _ascii_enc, _ascii_dec)
         self._add_tab(nb, tr("A1Z26"), tr("A1Z26：字母与数字互转（A=1 … Z=26）。"),
@@ -3491,6 +3502,26 @@ class SettingsPanel:
         ttk.Label(pad, text=tr("切换语言后界面将自动重建，当前页签会保留。"),
                   foreground="#888").pack(anchor="w", pady=(4, 0))
 
+        ttk.Label(pad, text=tr("参考仓库："),
+                  font=("Microsoft YaHei", 11, "bold")).pack(anchor="w", pady=(16, 0))
+        repo_row1 = ttk.Frame(pad)
+        repo_row1.pack(fill="x", pady=(6, 0))
+        ttk.Label(repo_row1, text=tr("服务端："), foreground="#555").pack(side="left")
+        srv_lbl = ttk.Label(repo_row1, text="https://github.com/Creeper19472/cfms_2",
+                            foreground="#2980b9", cursor="hand2")
+        srv_lbl.pack(side="left")
+        srv_lbl.bind(
+            "<Button-1>",
+            lambda e: _open_file("https://github.com/Creeper19472/cfms_2"))
+        repo_row2 = ttk.Frame(pad)
+        repo_row2.pack(fill="x", pady=(4, 0))
+        ttk.Label(repo_row2, text=tr("客户端："), foreground="#555").pack(side="left")
+        cli_lbl = ttk.Label(repo_row2, text="https://github.com/Creeper19472/cfms_client_next",
+                            foreground="#2980b9", cursor="hand2")
+        cli_lbl.pack(side="left")
+        cli_lbl.bind(
+            "<Button-1>",
+            lambda e: _open_file("https://github.com/Creeper19472/cfms_client_next"))
     def _apply_language(self) -> None:
         code = LANG_DISPLAY.get(self.lang_var.get(), "zh")
         self.toolbox.set_language(code)
@@ -3526,7 +3557,6 @@ class ToolboxApp:
 
         self.download_panel = DownloadPanel(nb, self)
         self.view_panel = QuickViewPanel(nb, self)
-        self.matrix_panel = MatrixPanel(nb, self)
         self.crypto_panel = CryptoPanel(nb, self)
         self.settings_panel = SettingsPanel(nb, self)
 
@@ -3537,11 +3567,10 @@ class ToolboxApp:
                 self.view_panel._load_cfg()
                 self.view_panel._scan()
 
-        nb.add(self.download_panel.frame, text=tr("下载"))
+        nb.add(self.download_panel.frame, text=tr("下载文件"))
         nb.add(self.view_panel.frame, text=tr("聊天记录"))
-        nb.add(self.matrix_panel.frame, text=tr("矩阵生成"))
-        nb.add(self.crypto_panel.frame, text=tr("加解密"))
-        nb.add(self.settings_panel.frame, text="⚙")
+        nb.add(self.crypto_panel.frame, text=tr("小工具"))
+        nb.add(self.settings_panel.frame, text="⚙️" + tr("设置"))
         nb.bind("<<NotebookTabChanged>>", self._on_tab_changed)
 
     def set_language(self, code: str) -> None:
