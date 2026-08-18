@@ -3507,21 +3507,21 @@ class SettingsPanel:
         repo_row1 = ttk.Frame(pad)
         repo_row1.pack(fill="x", pady=(6, 0))
         ttk.Label(repo_row1, text=tr("服务端："), foreground="#555").pack(side="left")
-        srv_lbl = ttk.Label(repo_row1, text="https://github.com/Creeper19472/cfms_2",
+        srv_lbl = ttk.Label(repo_row1, text="https://github.com/cfms-dev/cfms_on_websocket",
                             foreground="#2980b9", cursor="hand2")
         srv_lbl.pack(side="left")
         srv_lbl.bind(
             "<Button-1>",
-            lambda e: _open_file("https://github.com/Creeper19472/cfms_2"))
+            lambda e: _open_file("https://github.com/cfms-dev/cfms_on_websocket"))
         repo_row2 = ttk.Frame(pad)
         repo_row2.pack(fill="x", pady=(4, 0))
         ttk.Label(repo_row2, text=tr("客户端："), foreground="#555").pack(side="left")
-        cli_lbl = ttk.Label(repo_row2, text="https://github.com/Creeper19472/cfms_client_next",
+        cli_lbl = ttk.Label(repo_row2, text="https://github.com/cfms-dev/cfms_client_tauri",
                             foreground="#2980b9", cursor="hand2")
         cli_lbl.pack(side="left")
         cli_lbl.bind(
             "<Button-1>",
-            lambda e: _open_file("https://github.com/Creeper19472/cfms_client_next"))
+            lambda e: _open_file("https://github.com/cfms-dev/cfms_client_tauri"))
     def _apply_language(self) -> None:
         code = LANG_DISPLAY.get(self.lang_var.get(), "zh")
         self.toolbox.set_language(code)
